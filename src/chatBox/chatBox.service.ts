@@ -19,6 +19,20 @@ export class ChatBoxService {
         HttpStatus.BAD_REQUEST,
       );
     }
+    const chatBox = await this.prismaService.chatBox.findFirst({
+      where: {
+        users: {
+          every: {
+            id: { in: userIds },
+          },
+        },
+      },
+      include: { users: true },
+    });
+
+    if (chatBox) {
+      return chatBox;
+    }
     return this.prismaService.chatBox.create({
       data: chatBoxData,
     });
@@ -31,12 +45,13 @@ export class ChatBoxService {
   async getChatBoxById(id: string): Promise<ChatBox> {
     const chatBox = await this.prismaService.chatBox.findUnique({
       where: { id },
+      include: { messages: true },
     });
     if (!chatBox) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Hộp thoại tin nhắn không tồn tại`,
+          message: `Chatbox không tồn tại`,
         },
         HttpStatus.NOT_FOUND,
       );
@@ -52,7 +67,7 @@ export class ChatBoxService {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Hộp thoại tin nhắn không tồn tại`,
+          message: `Chatbox không tồn tại`,
         },
         HttpStatus.NOT_FOUND,
       );

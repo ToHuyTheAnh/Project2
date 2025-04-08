@@ -53,7 +53,7 @@ export class CommentController {
     const comment = await this.commentService.getCommentById(id);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Lấy bài đăng thành công',
+      message: 'Lấy bình luận thành công',
       data: comment,
     };
   }
