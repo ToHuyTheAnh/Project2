@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  Admin
+  User
+}
+
+enum UserStatus {
+  Active
+  Banned
+  Deleted
+}
+
+model User {
+  id            String     @id @default(cuid())
+  username      String     @unique
+  email         String     @unique
+  password      String
+  status        UserStatus
+  role          UserRole
+  displayName   String
+  avatar        String?
+  emailVerified Boolean    @default(false)
+  posts         Post[]
+  comments      Comment[]
+  chatBoxes     ChatBox[]  @relation("UserChatBox")
+  messages      Message[]
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PostStatus {
+  Published
+  Deleted
+  Banned
+  Pending
+}
+
+model Post {
+  id       String     @id @default(cuid())
+  userId   String
+  user     User       @relation(fields: [userId], references: [id])
+  title    String
+  content  String
+  videoUrl String?
+  imageUrl String?
+  status   PostStatus
+  likes    Int        @default(0)
+  comments Comment[]
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CommentStatus {
+  Published
+  Deleted
+}
+
+model Comment {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  postId        String
+  post          Post          @relation(fields: [postId], references: [id])
+  content       String
+  videoUrl      String?
+  imageUrl      String?
+  status CommentStatus
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatBox {
+  id        String    @id @default(cuid())
+  users     User[]    @relation("UserChatBox")
+  messages  Message[]
+  // timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum MessageStatus {
+  Published
+  Deleted
+}
+
+model Message {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  chatBoxId String
+  chatBox   ChatBox @relation(fields: [chatBoxId], references: [id])
+  content   String
+  status MessageStatus
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
