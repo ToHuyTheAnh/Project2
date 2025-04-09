@@ -77,4 +77,28 @@ export class PostService {
       where: { id },
     });
   }
+
+  async searchPostByKeyword(keyword: string) {
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        OR: [
+          { title: { contains: keyword } },
+          { content: { contains: keyword } }
+        ]
+      }
+    });
+  
+    if (posts.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'Không tìm thấy bài viết nào phù hợp',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  
+    return posts;
+  }
+  
 }
