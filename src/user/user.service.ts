@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User } from '@prisma/client';
+import e from 'express';
 
 @Injectable()
 export class UserService {
@@ -57,5 +58,63 @@ export class UserService {
     await this.prismaService.user.delete({
       where: { id },
     });
+  }
+
+  async followUser(followerId: string, followingId: string) {
+    if (followerId === followingId) {
+      throw new Error('Không thể theo dõi chính mình.');
+    }
+  
+    const existingFollow = await this.prismaService.following.findFirst({
+      where: {
+        followerId,
+        followingId,
+      },
+    });
+  
+    if (existingFollow) {
+      await this.prismaService.following.delete({
+        where: {id: existingFollow.id}
+      });
+
+      return {message :"Đã hủy theo dõi!!!"}
+    }
+    
+    await this.prismaService.following.create({
+      data: {
+        followerId,
+        followingId,
+      }
+    });
+
+    return {massage: "Theo dõi thành công!!!"};
+  }
+
+  // lấy ra tất cả những người mình follow.
+  async getFollowing(UserId: string){
+    const following = await this.prismaService.following.findMany({
+      where: {followerId: UserId},
+      include : {Following: true}
+    });
+
+    if(!following){
+      return {message: "Không có ai theo dõi bạn!!!"}
+    }
+
+    return following;
+  }
+  
+  // lấy ra tất cả những người follow mình.
+  async getFollowers(UserId: string){
+    const followers = await this.prismaService.following.findMany({
+      where: {followingId: UserId},
+      include : {Followers: true}
+    })
+
+    if(!followers){
+      return {message: "Bạn không theo dõi người khác!!!"}
+    }
+
+    return followers;
   }
 }
