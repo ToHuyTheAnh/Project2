@@ -38,8 +38,8 @@ model User {
   comments      Comment[]
   chatBoxes     ChatBox[]  @relation("UserChatBox")
   messages      Message[]
-  following     Following[] @relation("Following")
-  followers     Following[] @relation("Followers")
+  followings    UserFollow[] @relation("UserFollowing") // Người mình đang theo dõi
+  followers     UserFollow[] @relation("UserFollower") // Người đang theo dõi mình
 
   // timestamps
   createdAt DateTime @default(now())
@@ -121,14 +121,16 @@ model Message {
   updatedAt DateTime @updatedAt
 }
 
-model Following {
-  id          String   @id @default(cuid())
-  followerId  String
-  followingId String
-  Followers   User     @relation("Followers", fields: [followerId], references: [id])
-  Following   User     @relation("Following", fields: [followingId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model UserFollow {
+  id            String   @id @default(cuid())
+  followerId    String
+  followingId   String
+
+  follower      User     @relation("UserFollower", fields: [followerId], references: [id])
+  following     User     @relation("UserFollowing", fields: [followingId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([followerId, followingId])
 }
