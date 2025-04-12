@@ -3,7 +3,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User } from '@prisma/client';
-import e from 'express';
 
 @Injectable()
 export class UserService {
@@ -64,55 +63,55 @@ export class UserService {
     if (followerId === followingId) {
       throw new Error('Không thể theo dõi chính mình.');
     }
-  
-    const existingFollow = await this.prismaService.following.findFirst({
+
+    const existingFollow = await this.prismaService.userFollow.findFirst({
       where: {
         followerId,
         followingId,
       },
     });
-  
+
     if (existingFollow) {
-      await this.prismaService.following.delete({
-        where: {id: existingFollow.id}
+      await this.prismaService.userFollow.delete({
+        where: { id: existingFollow.id },
       });
 
-      return {message :"Đã hủy theo dõi!!!"}
+      return { message: 'Đã hủy theo dõi!!!' };
     }
-    
-    await this.prismaService.following.create({
+
+    await this.prismaService.userFollow.create({
       data: {
         followerId,
         followingId,
-      }
+      },
     });
 
-    return {massage: "Theo dõi thành công!!!"};
+    return { massage: 'Theo dõi thành công!!!' };
   }
 
   // lấy ra tất cả những người mình follow.
-  async getFollowing(UserId: string){
-    const following = await this.prismaService.following.findMany({
-      where: {followerId: UserId},
-      include : {Following: true}
+  async getFollowing(userId: string) {
+    const followings = await this.prismaService.userFollow.findMany({
+      where: { followerId: userId },
+      select: { following: true },
     });
 
-    if(!following){
-      return {message: "Không có ai theo dõi bạn!!!"}
+    if (followings.length === 0) {
+      return { message: 'Không có ai theo dõi bạn!!!' };
     }
 
-    return following;
+    return followings;
   }
-  
-  // lấy ra tất cả những người follow mình.
-  async getFollowers(UserId: string){
-    const followers = await this.prismaService.following.findMany({
-      where: {followingId: UserId},
-      include : {Followers: true}
-    })
 
-    if(!followers){
-      return {message: "Bạn không theo dõi người khác!!!"}
+  // lấy ra tất cả những người follow mình.
+  async getFollowers(userId: string) {
+    const followers = await this.prismaService.userFollow.findMany({
+      where: { followingId: userId },
+      select: { follower: true },
+    });
+
+    if (followers.length === 0) {
+      return { message: 'Bạn không theo dõi người khác!!!' };
     }
 
     return followers;
