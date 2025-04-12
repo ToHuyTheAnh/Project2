@@ -93,4 +93,14 @@ export class PostController {
       message: 'Xóa bài đăng thành công',
     };
   }
+  
+  @Get('search')
+  async searchPostByKeyword(@Query('keyword') keyword: string) {
+    const posts = this.postService.searchPostByKeyword(keyword);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài đăng thành công',
+      data: posts,
+    }
+  }
 }
