@@ -62,4 +62,37 @@ export class UserController {
       message: 'Xóa user thành công',
     };
   }
+
+  @Post('follow/:followerId/:followingId')
+  async followUser(
+    @Param('followerId') followerId: string,
+    @Param('followingId') followingId: string
+  ) {
+    const follow = await this.userService.followUser(followerId, followingId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Theo dõi thành công',
+      data: follow,
+    };
+  }
+
+  @Get('following/:id')
+  async getFollowing(@Param('id') id: string) {
+    const followings = await this.userService.getFollowing(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy danh sách người theo dõi thành công', 
+      data: followings, 
+    };
+  }
+
+  @Get('followers/:id')
+  async getFollowers(@Param('id') id: string) {
+    const followers = await this.userService.getFollowers(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy danh sách người theo dõi thành công',
+      data: followers,
+    };
+  }
 }
