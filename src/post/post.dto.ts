@@ -1,16 +1,12 @@
 import { PostStatus } from '@prisma/client';
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsEnum,
-  IsNumber,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types'
 
 export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
   userId: string;
+  
 
   @IsString()
   @IsNotEmpty()
@@ -24,15 +20,13 @@ export class CreatePostDto {
   status: PostStatus;
 
   @IsNumber()
-  likes: number;
-
   @IsOptional()
-  @IsString()
-  videoUrl: string;
+  like?: number = 0;
 
-  @IsOptional()
   @IsString()
-  imageUrl: string;
+  @IsOptional()
+  imageUrl?: string;
+
 }
 
-export class UpdatePostDto extends CreatePostDto {}
+export class UpdatePostDto extends PartialType(CreatePostDto) {}

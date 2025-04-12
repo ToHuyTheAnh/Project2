@@ -63,6 +63,8 @@ model Post {
   likes    Int        @default(0)
   comments Comment[]
 
+
+
   // timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -8,7 +8,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors, // Import decorator
+  ParseFilePipe, // Optional: Import pipes for validation
+  FileTypeValidator,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 
@@ -16,7 +23,20 @@ import { CreatePostDto, UpdatePostDto } from './post.dto';
 export class PostController {
   constructor(private readonly postService: PostService) {}
   @Post('/create')
-  async createPost(@Body() postData: CreatePostDto) {
+  @UseInterceptors(FileInterceptor('image'))
+  async createPost(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() postData: CreatePostDto
+  ) {
     const post = await this.postService.createPost(postData);
     return {
       statusCode: HttpStatus.OK,

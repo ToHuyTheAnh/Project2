@@ -3,18 +3,38 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { Post } from '@prisma/client';
+import { Express } from 'express';
 
 @Injectable()
 export class PostService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createPost(postData: CreatePostDto): Promise<Post> {
+  async createPost(postData: CreatePostDto, file?: Express.Multer.File): Promise<Post> {
+    let imageUrl = postData.imageUrl;
+    if(file) {
+      imageUrl = `/uploads/post-images/${file.filename}`; // Đường dẫn đến file đã lưu
+    }
+    const dataToSave = {...postData, imageUrl };
+    delete dataToSave.imageUrl; // Xóa trường imageUrl khỏi postData để không bị lưu trùng
+
     return this.prismaService.post.create({
       data: postData,
     });
   }
 
-  async updatePost(id: string, postData: UpdatePostDto): Promise<Post> {
+  async updatePost(id: string, postData: UpdatePostDto, file?: Express.Multer.File): Promise<Post> {
+    let imageUrl = postData.imageUrl; // Giữ nguyên imageUrl cũ nếu không có file mới
+    
+    if (file) {
+      // TODO: Xóa file cũ nếu cần (trước khi cập nhật DB)
+      // const post = await this.getPostById(id);
+      // if (post && post.imageUrl) { /* Xóa file tại post.imageUrl */ }
+
+      imageUrl = `/uploads/post-images/${file.filename}`;
+    }
+    const dataToUpdate = { ...postData, imageUrl };
+    delete dataToUpdate.imageUrl;
+
     return this.prismaService.post.update({
       where: { id },
       data: postData,
