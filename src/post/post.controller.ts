@@ -1,20 +1,10 @@
+// src/post/post.controller.ts
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UploadedFile,
-  UseInterceptors, // Import decorator
-  ParseFilePipe, // Optional: Import pipes for validation
-  FileTypeValidator,
-  MaxFileSizeValidator,
+  Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query,
+  UploadedFile, UseInterceptors, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator, // Thêm UploadedFiles nếu dùng FileFieldsInterceptor
+  // Thêm FileFieldsInterceptor nếu cần upload cả ảnh và video
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express'; // Hoặc FileFieldsInterceptor
 import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
@@ -22,8 +12,9 @@ import { CreatePostDto, UpdatePostDto } from './post.dto';
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
+
   @Post('/create')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image')) // Chỉ nhận field 'image'
   async createPost(
     @UploadedFile(
       new ParseFilePipe({
@@ -31,13 +22,14 @@ export class PostController {
           new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
           new FileTypeValidator({ fileType: 'image/*' }),
         ],
-        fileIsRequired: false,
+        fileIsRequired: false, // Không bắt buộc có file
       }),
     )
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined, // file có thể là undefined
     @Body() postData: CreatePostDto
   ) {
-    const post = await this.postService.createPost(postData);
+    // TRUYỀN CẢ file VÀO SERVICE
+    const post = await this.postService.createPost(postData, file);
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -46,8 +38,23 @@ export class PostController {
   }
 
   @Patch('update/:id')
-  async updatePost(@Param('id') id: string, @Body() postData: UpdatePostDto) {
-    const post = await this.postService.updatePost(id, postData);
+  @UseInterceptors(FileInterceptor('image')) // Chỉ nhận field 'image'
+  async updatePost(
+    @Param('id') id: string,
+    @Body() postData: UpdatePostDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false, // Không bắt buộc có file khi update
+      }),
+    )
+    file?: Express.Multer.File // file có thể là undefined
+  ) {
+    // TRUYỀN CẢ file VÀO SERVICE
+    const post = await this.postService.updatePost(id, postData, file);
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật bài đăng thành công',
@@ -55,6 +62,7 @@ export class PostController {
     };
   }
 
+  // ... các phương thức khác giữ nguyên ...
   @Get()
   async getPosts() {
     const posts = await this.postService.getPosts();

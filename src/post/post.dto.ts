@@ -6,7 +6,6 @@ export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
   userId: string;
-  
 
   @IsString()
   @IsNotEmpty()
@@ -20,12 +19,16 @@ export class CreatePostDto {
   status: PostStatus;
 
   @IsNumber()
-  @IsOptional()
-  like?: number = 0;
+  likes: number;
 
-  @IsString()
   @IsOptional()
-  imageUrl?: string;
+  @IsString()
+  videoUrl: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl: string;
+
 
 }
 
