@@ -25,18 +25,18 @@ enum UserStatus {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  username      String     @unique
-  email         String     @unique
+  id            String       @id @default(cuid())
+  username      String       @unique
+  email         String       @unique
   password      String
   status        UserStatus
   role          UserRole
   displayName   String
   avatar        String?
-  emailVerified Boolean    @default(false)
+  emailVerified Boolean      @default(false)
   posts         Post[]
   comments      Comment[]
-  chatBoxes     ChatBox[]  @relation("UserChatBox")
+  chatBoxes     ChatBox[]    @relation("UserChatBox")
   messages      Message[]
   followings    UserFollow[] @relation("UserFollowing") // Người mình đang theo dõi
   followers     UserFollow[] @relation("UserFollower") // Người đang theo dõi mình
@@ -54,16 +54,18 @@ enum PostStatus {
 }
 
 model Post {
-  id       String     @id @default(cuid())
-  userId   String
-  user     User       @relation(fields: [userId], references: [id])
-  title    String
-  content  String
-  videoUrl String?
-  imageUrl String?
-  status   PostStatus
-  likes    Int        @default(0)
-  comments Comment[]
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  trendTopicId String
+  trendTopic   TrendTopic @relation(fields: [trendTopicId], references: [id])
+  title        String
+  content      String
+  videoUrl     String?
+  imageUrl     String?
+  status       PostStatus
+  likes        Int        @default(0)
+  comments     Comment[]
 
 
 
@@ -78,15 +80,15 @@ enum CommentStatus {
 }
 
 model Comment {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  postId        String
-  post          Post          @relation(fields: [postId], references: [id])
-  content       String
-  videoUrl      String?
-  imageUrl      String?
-  status CommentStatus
+  id       String        @id @default(cuid())
+  userId   String
+  user     User          @relation(fields: [userId], references: [id])
+  postId   String
+  post     Post          @relation(fields: [postId], references: [id])
+  content  String
+  videoUrl String?
+  imageUrl String?
+  status   CommentStatus
 
   // timestamps
   createdAt DateTime @default(now())
@@ -108,13 +110,13 @@ enum MessageStatus {
 }
 
 model Message {
-  id        String  @id @default(cuid())
+  id        String        @id @default(cuid())
   userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
   chatBoxId String
-  chatBox   ChatBox @relation(fields: [chatBoxId], references: [id])
+  chatBox   ChatBox       @relation(fields: [chatBoxId], references: [id])
   content   String
-  status MessageStatus
+  status    MessageStatus
 
   // timestamps
   createdAt DateTime @default(now())
@@ -122,15 +124,27 @@ model Message {
 }
 
 model UserFollow {
-  id            String   @id @default(cuid())
-  followerId    String
-  followingId   String
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
 
-  follower      User     @relation("UserFollower", fields: [followerId], references: [id])
-  following     User     @relation("UserFollowing", fields: [followingId], references: [id])
+  follower  User @relation("UserFollower", fields: [followerId], references: [id])
+  following User @relation("UserFollowing", fields: [followingId], references: [id])
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([followerId, followingId])
+}
+
+model TrendTopic {
+  id          String @id @default(cuid())
+  posts       Post[]
+  title       String
+  description String
+  note        String
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
