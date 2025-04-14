@@ -6,9 +6,17 @@ import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { ChatboxModule } from './chatBox/chatBox.module';
+import { TrendTopicModule } from './trendTopic/trendTopic.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, PostModule, CommentModule, ChatboxModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    PostModule,
+    CommentModule,
+    ChatboxModule,
+    TrendTopicModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

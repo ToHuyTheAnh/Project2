@@ -14,6 +14,10 @@ export class CreatePostDto {
 
   @IsString()
   @IsNotEmpty()
+  trendTopicId: string;
+
+  @IsString()
+  @IsNotEmpty()
   title: string;
 
   @IsString()

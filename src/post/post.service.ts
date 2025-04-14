@@ -83,11 +83,11 @@ export class PostService {
       where: {
         OR: [
           { title: { contains: keyword } },
-          { content: { contains: keyword } }
-        ]
-      }
+          { content: { contains: keyword } },
+        ],
+      },
     });
-  
+
     if (posts.length === 0) {
       throw new HttpException(
         {
@@ -97,8 +97,7 @@ export class PostService {
         HttpStatus.NOT_FOUND,
       );
     }
-  
+
     return posts;
   }
-  
 }
