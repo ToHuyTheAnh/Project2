@@ -96,8 +96,8 @@ export class UserService {
       select: { following: true },
     });
 
-    if (followings.length === 0) {
-      return { message: 'Không có ai theo dõi bạn!!!' };
+    if(!followings){
+      return {message: "Không có ai theo dõi bạn!!!"}
     }
 
     return followings;
@@ -110,8 +110,8 @@ export class UserService {
       select: { follower: true },
     });
 
-    if (followers.length === 0) {
-      return { message: 'Bạn không theo dõi người khác!!!' };
+    if(!followers){
+      return {message: "Bạn không theo dõi người khác!!!"}
     }
 
     return followers;
