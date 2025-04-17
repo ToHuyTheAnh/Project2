@@ -16,7 +16,7 @@ import { extname } from 'path';
         filename: (req, file, cb) => {
           // Tạo tên file duy nhất
           const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-          cb(null, `<span class="math-inline">\{randomName\}</span>{extname(file.originalname)}`);
+          cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
       // Có thể thêm các tùy chọn khác như giới hạn kích thước file (limits)

@@ -31,6 +31,10 @@ export class CreatePostDto {
   @IsOptional()
   imageUrl?: string;
 
+  @IsString()
+  @IsOptional()
+  videoUrl?: string;
+
 }
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {}

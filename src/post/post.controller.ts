@@ -1,3 +1,5 @@
+// src/post/post.controller.ts
+
 import {
   Body,
   Controller,
@@ -9,8 +11,8 @@ import {
   Post,
   Query,
   UploadedFile,
-  UseInterceptors, // Import decorator
-  ParseFilePipe, // Optional: Import pipes for validation
+  UseInterceptors,
+  ParseFilePipe,
   FileTypeValidator,
   MaxFileSizeValidator,
 } from '@nestjs/common';
@@ -22,22 +24,37 @@ import { CreatePostDto, UpdatePostDto } from './post.dto';
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
+
   @Post('/create')
   @UseInterceptors(FileInterceptor('image'))
   async createPost(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
           new FileTypeValidator({ fileType: 'image/*' }),
         ],
         fileIsRequired: false,
       }),
     )
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
     @Body() postData: CreatePostDto
   ) {
-    const post = await this.postService.createPost(postData);
+    // --- DEBUGGING STEP ---
+    console.log('--- PostController ---');
+    console.log('Received file:', file ? file.originalname : 'No file');
+    console.log('Received postData:', postData); // <-- Add this log
+    // --- END DEBUGGING STEP ---
+
+    // Check if postData is undefined BEFORE calling the service
+    if (!postData) {
+       console.error('postData is undefined or null in Controller!');
+       // You might want to throw an error here or handle it appropriately
+       // throw new BadRequestException('Post data is missing');
+    }
+
+
+    const post = await this.postService.createPost(postData, file); // Line 43 (approx)
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -45,15 +62,32 @@ export class PostController {
     };
   }
 
+  // Other methods remain the same...
+
   @Patch('update/:id')
-  async updatePost(@Param('id') id: string, @Body() postData: UpdatePostDto) {
-    const post = await this.postService.updatePost(id, postData);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Cập nhật bài đăng thành công',
-      data: post,
-    };
-  }
+  @UseInterceptors(FileInterceptor('image')) // Add interceptor for update too if needed
+  async updatePost(
+      @Param('id') id: string,
+      @Body() postData: UpdatePostDto,
+      @UploadedFile(
+         new ParseFilePipe({
+            validators: [
+               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+               new FileTypeValidator({ fileType: 'image/*' }),
+            ],
+            fileIsRequired: false, // Important if updating without changing image
+         }),
+      ) file?: Express.Multer.File // Make file optional here too
+   ) {
+      // Pass file to update service as well
+      const post = await this.postService.updatePost(id, postData, file); // Pass file here
+      return {
+         statusCode: HttpStatus.OK,
+         message: 'Cập nhật bài đăng thành công',
+         data: post,
+      };
+   }
+
 
   @Get()
   async getPosts() {
