@@ -38,7 +38,7 @@ export class PostController {
       }),
     )
     file: Express.Multer.File | undefined,
-    @Body() postData: CreatePostDto
+    @Body() postData: CreatePostDto,
   ) {
     // --- DEBUGGING STEP ---
     console.log('--- PostController ---');
@@ -48,11 +48,10 @@ export class PostController {
 
     // Check if postData is undefined BEFORE calling the service
     if (!postData) {
-       console.error('postData is undefined or null in Controller!');
-       // You might want to throw an error here or handle it appropriately
-       // throw new BadRequestException('Post data is missing');
+      console.error('postData is undefined or null in Controller!');
+      // You might want to throw an error here or handle it appropriately
+      // throw new BadRequestException('Post data is missing');
     }
-
 
     const post = await this.postService.createPost(postData, file); // Line 43 (approx)
     return {
@@ -67,27 +66,27 @@ export class PostController {
   @Patch('update/:id')
   @UseInterceptors(FileInterceptor('image')) // Add interceptor for update too if needed
   async updatePost(
-      @Param('id') id: string,
-      @Body() postData: UpdatePostDto,
-      @UploadedFile(
-         new ParseFilePipe({
-            validators: [
-               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
-               new FileTypeValidator({ fileType: 'image/*' }),
-            ],
-            fileIsRequired: false, // Important if updating without changing image
-         }),
-      ) file?: Express.Multer.File // Make file optional here too
-   ) {
-      // Pass file to update service as well
-      const post = await this.postService.updatePost(id, postData, file); // Pass file here
-      return {
-         statusCode: HttpStatus.OK,
-         message: 'Cập nhật bài đăng thành công',
-         data: post,
-      };
-   }
-
+    @Param('id') id: string,
+    @Body() postData: UpdatePostDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false, // Important if updating without changing image
+      }),
+    )
+    file?: Express.Multer.File, // Make file optional here too
+  ) {
+    // Pass file to update service as well
+    const post = await this.postService.updatePost(id, postData, file); // Pass file here
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Cập nhật bài đăng thành công',
+      data: post,
+    };
+  }
 
   @Get()
   async getPosts() {
