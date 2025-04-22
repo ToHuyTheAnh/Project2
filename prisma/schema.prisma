@@ -40,7 +40,8 @@ model User {
   messages      Message[]
   followings    UserFollow[] @relation("UserFollowing") // Người mình đang theo dõi
   followers     UserFollow[] @relation("UserFollower") // Người đang theo dõi mình
-  sharedPosts   Post[]       @relation("SharedPost")
+  
+  sharedPosts   UserSharePost[]
 
   // timestamps
   createdAt DateTime @default(now())
@@ -57,7 +58,7 @@ enum PostStatus {
 model Post {
   id           String     @id @default(cuid())
   userId       String
-  user         User       @relation(fields: [userId], references: [id])
+  user         User       @relation("UserPost",fields: [userId], references: [id])
   trendTopicId String
   trendTopic   TrendTopic @relation(fields: [trendTopicId], references: [id])
   title        String
@@ -68,7 +69,7 @@ model Post {
   likes        Int        @default(0)
   comments     Comment[]
 
-
+  sharedById   UserSharePost[]
 
   // timestamps
   createdAt DateTime @default(now())
@@ -148,4 +149,19 @@ model TrendTopic {
   // timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserSharePost {
+  id          String @id @default(cuid())
+
+  userId      String
+  user        User   @relation(fields: [userId], references: [id])
+
+  postId      String
+  post        Post   @relation(fields: [postId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, postId])
 }

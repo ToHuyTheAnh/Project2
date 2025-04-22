@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { Post } from '@prisma/client';
+import { UserSharePost } from '@prisma/client';
 import * as fs from 'fs'; // Import fs module for file system operations
 import * as path from 'path';
 
@@ -184,4 +185,137 @@ export class PostService {
 
     return posts;
   }
+
+
+  async UserSharePost(
+    postId: string,
+    userId: string,
+  ): Promise<{ massage: string, data: UserSharePost }> {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+  
+    if (!post) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'Bài đăng không tồn tại',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  
+    const alreadyShared = await this.prismaService.userSharePost.findFirst({
+      where: {
+        postId,
+        userId,
+      },
+    });
+  
+    if (alreadyShared) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: 'Bạn đã chia sẻ bài viết này rồi.',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+  
+    const sharedPost = await this.prismaService.userSharePost.create({
+      data: {
+        postId,
+        userId,
+      },  
+    });  
+
+    return {
+      massage: 'Chia sẻ bài viết thành công',
+      data: sharedPost,
+    }
+  }
+
+  async UserDeleteSharePost(
+    postId: string,
+    userId: string,
+  ): Promise<{ massage: string }> {
+    const post = await this.prismaService.post.findUnique({
+      where: { id: postId },
+    });
+  
+    if (!post) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'Bài đăng không tồn tại',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  
+    const alreadyShared = await this.prismaService.userSharePost.findFirst({
+      where: {
+        postId,
+        userId,
+      },
+    });
+  
+    if (!alreadyShared) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: 'Bài viết này chưa được chia sẻ.',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+  
+    this.prismaService.userSharePost.delete({
+      where: {  id: alreadyShared.id},
+    });
+
+    return { massage: 'Hủy chia sẻ bài viết thành công' };
+  }
+
+  async getPostShareByUserId(userId: string): Promise<Post[]> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `User không tồn tại`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const userSharePost = await this.prismaService.userSharePost.findMany({
+      where: { userId },
+    });
+    
+    const posts: Post[] = [];
+
+    for (const postShared of userSharePost) {
+      const post = await this.prismaService.post.findUnique({
+        where: { id: postShared.postId },
+      });
+      if (!post) {
+        posts.push({
+          id: postShared.postId,
+          title: "Bài viết đã bị xóa",
+          content: "Nội dung không khả dụng",
+          userId: "",
+          createdAt: postShared.createdAt,
+          updatedAt: postShared.updatedAt,
+          imageUrl: null,
+        } as Post);
+      } else {
+        posts.push(post);
+      }
+    }
+
+    return posts;
+  }
+  
 }
