@@ -1,7 +1,8 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray } from 'class-validator';
 
 export class CreateChatBoxDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   userIds: string[];
 }

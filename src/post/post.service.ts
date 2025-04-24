@@ -36,7 +36,7 @@ export class PostService {
       );
     }
 
-    const dataToSave: CreatePostDto & { imageUrl?: string | null } = {
+    const dataToSave: CreatePostDto = {
       ...postData,
     }; // Potential error if postData is not an object
 
@@ -186,15 +186,14 @@ export class PostService {
     return posts;
   }
 
-
   async UserSharePost(
     postId: string,
     userId: string,
-  ): Promise<{ massage: string, data: UserSharePost }> {
+  ): Promise<{ massage: string; data: UserSharePost }> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
-  
+
     if (!post) {
       throw new HttpException(
         {
@@ -204,14 +203,14 @@ export class PostService {
         HttpStatus.NOT_FOUND,
       );
     }
-  
+
     const alreadyShared = await this.prismaService.userSharePost.findFirst({
       where: {
         postId,
         userId,
       },
     });
-  
+
     if (alreadyShared) {
       throw new HttpException(
         {
@@ -221,18 +220,18 @@ export class PostService {
         HttpStatus.CONFLICT,
       );
     }
-  
+
     const sharedPost = await this.prismaService.userSharePost.create({
       data: {
         postId,
         userId,
-      },  
-    });  
+      },
+    });
 
     return {
       massage: 'Chia sẻ bài viết thành công',
       data: sharedPost,
-    }
+    };
   }
 
   async UserDeleteSharePost(
@@ -242,7 +241,7 @@ export class PostService {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
-  
+
     if (!post) {
       throw new HttpException(
         {
@@ -252,14 +251,14 @@ export class PostService {
         HttpStatus.NOT_FOUND,
       );
     }
-  
+
     const alreadyShared = await this.prismaService.userSharePost.findFirst({
       where: {
         postId,
         userId,
       },
     });
-  
+
     if (!alreadyShared) {
       throw new HttpException(
         {
@@ -269,9 +268,9 @@ export class PostService {
         HttpStatus.CONFLICT,
       );
     }
-  
-    this.prismaService.userSharePost.delete({
-      where: {  id: alreadyShared.id},
+
+    await this.prismaService.userSharePost.delete({
+      where: { id: alreadyShared.id },
     });
 
     return { massage: 'Hủy chia sẻ bài viết thành công' };
@@ -293,7 +292,7 @@ export class PostService {
     const userSharePost = await this.prismaService.userSharePost.findMany({
       where: { userId },
     });
-    
+
     const posts: Post[] = [];
 
     for (const postShared of userSharePost) {
@@ -303,9 +302,9 @@ export class PostService {
       if (!post) {
         posts.push({
           id: postShared.postId,
-          title: "Bài viết đã bị xóa",
-          content: "Nội dung không khả dụng",
-          userId: "",
+          title: 'Bài viết đã bị xóa',
+          content: 'Nội dung không khả dụng',
+          userId: '',
           createdAt: postShared.createdAt,
           updatedAt: postShared.updatedAt,
           imageUrl: null,
@@ -317,5 +316,4 @@ export class PostService {
 
     return posts;
   }
-  
 }

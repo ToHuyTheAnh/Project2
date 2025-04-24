@@ -165,5 +165,4 @@ export class PostController {
       data: posts,
     };
   }
-
 }

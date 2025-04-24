@@ -7,6 +7,7 @@ import { PostModule } from './post/post.module'; // Import PostModule
 import { CommentModule } from './comment/comment.module';
 import { ChatboxModule } from './chatBox/chatBox.module';
 import { TrendTopicModule } from './trendTopic/trendTopic.module';
+import { ChatGatewayModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TrendTopicModule } from './trendTopic/trendTopic.module';
     CommentModule,
     ChatboxModule,
     TrendTopicModule,
+    ChatGatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService],
