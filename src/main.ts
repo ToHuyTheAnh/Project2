@@ -11,6 +11,13 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/', // Tiền tố URL
   });
+
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',    
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, 
+  })
+  
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

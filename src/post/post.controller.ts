@@ -136,4 +136,34 @@ export class PostController {
       data: posts,
     };
   }
+
+  // Chia sẻ bài viết
+  @Post('share/:postId')
+  async sharePost(
+    @Param('postId') postId: string,
+    @Query('userId') userId: string,
+  ) {
+    return this.postService.UserSharePost(postId, userId);
+  }
+
+  // Hủy chia sẻ bài viết
+  @Delete('unshare/:postId')
+  async unsharePost(
+    @Param('postId') postId: string,
+    @Query('userId') userId: string,
+  ) {
+    await this.postService.UserDeleteSharePost(postId, userId);
+  }
+
+  // Lấy danh sách bài viết đã chia sẻ của user
+  @Get('shared')
+  async getSharedPosts(@Query('userId') userId: string) {
+    const posts = await this.postService.getPostShareByUserId(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài viết đã chia sẻ thành công',
+      data: posts,
+    };
+  }
+
 }
