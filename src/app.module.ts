@@ -8,6 +8,7 @@ import { CommentModule } from './comment/comment.module';
 import { ChatboxModule } from './chatBox/chatBox.module';
 import { TrendTopicModule } from './trendTopic/trendTopic.module';
 import { ChatGatewayModule } from './chat/chat.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChatGatewayModule } from './chat/chat.module';
     ChatboxModule,
     TrendTopicModule,
     ChatGatewayModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
