@@ -186,11 +186,11 @@ export class PostService {
     return posts;
   }
 
-
+  // Khi người dùng chia sẻ bài viết, tạo một bản ghi trong bảng userSharePost
   async UserSharePost(
     postId: string,
     userId: string,
-  ): Promise<{ massage: string, data: UserSharePost }> {
+  ) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
@@ -222,23 +222,21 @@ export class PostService {
       );
     }
   
-    const sharedPost = await this.prismaService.userSharePost.create({
+    return await this.prismaService.userSharePost.create({
       data: {
         postId,
         userId,
       },  
     });  
 
-    return {
-      massage: 'Chia sẻ bài viết thành công',
-      data: sharedPost,
-    }
+    
   }
 
+  // Khi người dùng hủy chia sẻ bài viết, xóa bản ghi trong bảng userSharePost
   async UserDeleteSharePost(
     postId: string,
     userId: string,
-  ): Promise<{ massage: string }> {
+  ) {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
@@ -270,13 +268,14 @@ export class PostService {
       );
     }
   
-    this.prismaService.userSharePost.delete({
+    return this.prismaService.userSharePost.delete({
       where: {  id: alreadyShared.id},
     });
 
-    return { massage: 'Hủy chia sẻ bài viết thành công' };
+
   }
 
+  // Lấy danh sách bài viết mà người dùng đã chia sẻ, nếu bài viết đã bị xóa thì trả về bài viết nội dung đặc biệt
   async getPostShareByUserId(userId: string): Promise<Post[]> {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
