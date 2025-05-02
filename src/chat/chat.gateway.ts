@@ -47,14 +47,13 @@ export class ChatGateway
   ) {
     try {
       const createMessageDto: CreateMessageDto = {
-        userId,
         chatBoxId,
         content: message,
         status: 'Published',
       };
 
       const newMessage =
-        await this.messageService.createMessage(createMessageDto);
+        await this.messageService.createMessage(createMessageDto, userId);
       this.io.to(chatBoxId).emit('message', {
         userId: newMessage.userId,
         chatBoxId: newMessage.chatBoxId,
