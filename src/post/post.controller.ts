@@ -20,14 +20,19 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
   @UseInterceptors(FileInterceptor('image'))
   async createPost(
+    @Body() postData: CreatePostDto,
+    @Req() req,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -38,7 +43,7 @@ export class PostController {
       }),
     )
     file: Express.Multer.File | undefined,
-    @Body() postData: CreatePostDto,
+
   ) {
     // --- DEBUGGING STEP ---
     console.log('--- PostController ---');
@@ -53,7 +58,8 @@ export class PostController {
       // throw new BadRequestException('Post data is missing');
     }
 
-    const post = await this.postService.createPost(postData, file); // Line 43 (approx)
+    const userId = req.user.id; 
+    const post = await this.postService.createPost(postData, userId, file); // Line 43 (approx)
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -62,12 +68,13 @@ export class PostController {
   }
 
   // Other methods remain the same...
-
+  @UseGuards(AuthGuard('jwt'))
   @Patch('update/:id')
   @UseInterceptors(FileInterceptor('image')) // Add interceptor for update too if needed
   async updatePost(
     @Param('id') id: string,
     @Body() postData: UpdatePostDto,
+    @Req() req,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -80,7 +87,8 @@ export class PostController {
     file?: Express.Multer.File, // Make file optional here too
   ) {
     // Pass file to update service as well
-    const post = await this.postService.updatePost(id, postData, file); // Pass file here
+    const userId = req.user.id;
+    const post = await this.postService.updatePost(id, postData, userId, file); // Pass file here
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật bài đăng thành công',
@@ -108,8 +116,10 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('user-posts')
-  async getPostsByUserId(@Query('userId') userId: string) {
+  async getPostsByUserId(@Req() req) {
+    const userId = req.user.id;
     const posts = await this.postService.getPostsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -138,26 +148,32 @@ export class PostController {
   }
 
   // Chia sẻ bài viết
+  @UseGuards(AuthGuard('jwt'))
   @Post('share/:postId')
   async sharePost(
     @Param('postId') postId: string,
-    @Query('userId') userId: string,
+    @Req() req,
   ) {
+    const userId = req.user.id;
     return this.postService.UserSharePost(postId, userId);
   }
 
   // Hủy chia sẻ bài viết
+  @UseGuards(AuthGuard('jwt'))
   @Delete('unshare/:postId')
   async unsharePost(
     @Param('postId') postId: string,
-    @Query('userId') userId: string,
+    @Req() req,
   ) {
+    const userId = req.user.id;
     await this.postService.UserDeleteSharePost(postId, userId);
   }
 
   // Lấy danh sách bài viết đã chia sẻ của user
+  @UseGuards(AuthGuard('jwt'))
   @Get('shared')
-  async getSharedPosts(@Query('userId') userId: string) {
+  async getSharedPosts(@Req() req) {
+    const userId = req.user.id;
     const posts = await this.postService.getPostShareByUserId(userId);
     return {
       statusCode: HttpStatus.OK,

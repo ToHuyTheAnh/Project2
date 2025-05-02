@@ -8,19 +8,26 @@ import { Comment } from '@prisma/client';
 export class CommentService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createComment(commentData: CreateCommentDto): Promise<Comment> {
+  async createComment(commentData: CreateCommentDto, userId: string): Promise<Comment> {
     return this.prismaService.comment.create({
-      data: commentData,
+      data: {
+        ...commentData,
+        userId,
+      }
     });
   }
 
   async updateComment(
     id: string,
     commentData: UpdateCommentDto,
+    userId: string,
   ): Promise<Comment> {
     return this.prismaService.comment.update({
       where: { id },
-      data: commentData,
+      data: {
+        ...commentData,
+        userId,
+      }
     });
   }
 
