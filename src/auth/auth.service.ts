@@ -7,7 +7,10 @@ import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+  ) {}
 
   async register(dto: RegisterDto) {
     const userExists = await this.prisma.user.findUnique({
@@ -46,6 +49,9 @@ export class AuthService {
     if (!isMatch) throw new BadRequestException('Sai mật khẩu');
 
     const token = this.jwt.sign({ sub: user.id });
-    return { token, user: { id: user.id, username: user.username, email: user.email } };
+    return {
+      token,
+      user: { id: user.id, username: user.username, email: user.email },
+    };
   }
 }
