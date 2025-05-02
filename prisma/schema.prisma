@@ -66,7 +66,6 @@ model Post {
   videoUrl     String?
   imageUrl     String?
   status       PostStatus
-  likes        Int        @default(0)
   comments     Comment[]
 
   sharedById   UserSharePost[]
