@@ -8,9 +8,9 @@ import {
 } from 'class-validator';
 
 export class CreateCommentDto {
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // userId: string;
 
   @IsString()
   @IsNotEmpty()

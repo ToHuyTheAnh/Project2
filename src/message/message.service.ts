@@ -8,19 +8,26 @@ import { Message } from '@prisma/client';
 export class MessageService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createMessage(messageData: CreateMessageDto): Promise<Message> {
+  async createMessage(messageData: CreateMessageDto, userId: string): Promise<Message> {
     return this.prismaService.message.create({
-      data: messageData,
+      data: {
+        ...messageData,
+        userId,
+      }
     });
   }
 
   async updateMessage(
     id: string,
     messageData: UpdateMessageDto,
+    userId: string,
   ): Promise<Message> {
     return this.prismaService.message.update({
       where: { id },
-      data: messageData,
+      data: {
+        ...messageData,
+        userId,
+      }
     });
   }
 

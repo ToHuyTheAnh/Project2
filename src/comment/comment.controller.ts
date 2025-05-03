@@ -11,13 +11,19 @@ import {
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
 
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createComment(@Body() commentData: CreateCommentDto) {
-    const comment = await this.commentService.createComment(commentData);
+  async createComment(@Body() commentData: CreateCommentDto, @Req() req) {
+    const userId = req.user.id; 
+    const comment = await this.commentService.createComment(commentData, userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Bình luận thành công',
@@ -25,12 +31,15 @@ export class CommentController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch('update/:id')
   async updateComment(
     @Param('id') id: string,
     @Body() commentData: UpdateCommentDto,
+    @Req() req,
   ) {
-    const comment = await this.commentService.updateComment(id, commentData);
+    const userId = req.user.id;
+    const comment = await this.commentService.updateComment(id, commentData, userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật bình luận thành công',

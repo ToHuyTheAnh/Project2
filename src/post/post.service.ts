@@ -13,6 +13,7 @@ export class PostService {
 
   async createPost(
     postData: CreatePostDto,
+    userId: string,
     file?: Express.Multer.File,
   ): Promise<Post> {
     // --- DEBUGGING STEP ---
@@ -48,13 +49,17 @@ export class PostService {
     }
 
     return this.prismaService.post.create({
-      data: dataToSave,
+      data: {
+        ...dataToSave,
+        userId, 
+      }
     });
   }
 
   async updatePost(
     id: string,
     postData: UpdatePostDto,
+    userId: string,
     file?: Express.Multer.File,
   ): Promise<Post> {
     const post = await this.prismaService.post.findUnique({ where: { id } }); // Get existing post to check old image
@@ -101,7 +106,7 @@ export class PostService {
 
     return this.prismaService.post.update({
       where: { id },
-      data: dataToUpdate, // Use the modified dataToUpdate object
+      data: {...dataToUpdate, userId} // Use the modified dataToUpdate object
     });
   }
 

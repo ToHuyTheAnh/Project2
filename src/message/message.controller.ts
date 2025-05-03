@@ -11,13 +11,19 @@ import {
 } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { CreateMessageDto, UpdateMessageDto } from './message.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
 
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createMessage(@Body() messageData: CreateMessageDto) {
-    const message = await this.messageService.createMessage(messageData);
+  async createMessage(@Body() messageData: CreateMessageDto, @Req() req) {
+    const userId = req.user.id;
+    const message = await this.messageService.createMessage(messageData, userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo tin nhắn thành công',
@@ -29,8 +35,10 @@ export class MessageController {
   async updateMessage(
     @Param('id') id: string,
     @Body() messageData: UpdateMessageDto,
+    @Req() req,
   ) {
-    const message = await this.messageService.updateMessage(id, messageData);
+    const userId = req.user.id;
+    const message = await this.messageService.updateMessage(id, messageData, userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật tin nhắn thành công',
