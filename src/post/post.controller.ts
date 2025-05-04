@@ -22,6 +22,7 @@ import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
 import { UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('post')
 export class PostController {
@@ -32,7 +33,7 @@ export class PostController {
   @UseInterceptors(FileInterceptor('image'))
   async createPost(
     @Body() postData: CreatePostDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -43,7 +44,6 @@ export class PostController {
       }),
     )
     file: Express.Multer.File | undefined,
-
   ) {
     // --- DEBUGGING STEP ---
     console.log('--- PostController ---');
@@ -58,7 +58,8 @@ export class PostController {
       // throw new BadRequestException('Post data is missing');
     }
 
-    const userId = req.user.id; 
+    const userId = req.user.userId;
+    console.log(req);
     const post = await this.postService.createPost(postData, userId, file); // Line 43 (approx)
     return {
       statusCode: HttpStatus.OK,
@@ -74,7 +75,7 @@ export class PostController {
   async updatePost(
     @Param('id') id: string,
     @Body() postData: UpdatePostDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -87,7 +88,7 @@ export class PostController {
     file?: Express.Multer.File, // Make file optional here too
   ) {
     // Pass file to update service as well
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const post = await this.postService.updatePost(id, postData, userId, file); // Pass file here
     return {
       statusCode: HttpStatus.OK,
@@ -118,8 +119,8 @@ export class PostController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('user-posts')
-  async getPostsByUserId(@Req() req) {
-    const userId = req.user.id;
+  async getPostsByUserId(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
     const posts = await this.postService.getPostsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -152,9 +153,9 @@ export class PostController {
   @Post('share/:postId')
   async sharePost(
     @Param('postId') postId: string,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return this.postService.UserSharePost(postId, userId);
   }
 
@@ -163,17 +164,17 @@ export class PostController {
   @Delete('unshare/:postId')
   async unsharePost(
     @Param('postId') postId: string,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     await this.postService.UserDeleteSharePost(postId, userId);
   }
 
   // Lấy danh sách bài viết đã chia sẻ của user
   @UseGuards(AuthGuard('jwt'))
   @Get('shared')
-  async getSharedPosts(@Req() req) {
-    const userId = req.user.id;
+  async getSharedPosts(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
     const posts = await this.postService.getPostShareByUserId(userId);
     return {
       statusCode: HttpStatus.OK,

@@ -8,12 +8,15 @@ import { Message } from '@prisma/client';
 export class MessageService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createMessage(messageData: CreateMessageDto, userId: string): Promise<Message> {
+  async createMessage(
+    messageData: CreateMessageDto,
+    userId: string,
+  ): Promise<Message> {
     return this.prismaService.message.create({
       data: {
         ...messageData,
         userId,
-      }
+      },
     });
   }
 
@@ -27,7 +30,7 @@ export class MessageService {
       data: {
         ...messageData,
         userId,
-      }
+      },
     });
   }
 

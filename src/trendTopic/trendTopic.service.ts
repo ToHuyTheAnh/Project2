@@ -11,9 +11,21 @@ export class TrendTopicService {
   async createTrendTopic(
     trendTopicData: CreateTrendTopicDto,
   ): Promise<TrendTopic> {
-    return this.prismaService.trendTopic.create({
-      data: trendTopicData,
-    });
+    try {
+      return await this.prismaService.trendTopic.create({
+        data: { ...trendTopicData },
+      });
+    } catch (error) {
+      console.error('Error creating TrendTopic:', error);
+
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Không thể tạo xu hướng',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async updateTrendTopic(
@@ -22,7 +34,7 @@ export class TrendTopicService {
   ): Promise<TrendTopic> {
     return this.prismaService.trendTopic.update({
       where: { id },
-      data: trendTopicData,
+      data: { ...trendTopicData },
     });
   }
 

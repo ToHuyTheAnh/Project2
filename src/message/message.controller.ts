@@ -13,7 +13,7 @@ import { MessageService } from './message.service';
 import { CreateMessageDto, UpdateMessageDto } from './message.dto';
 import { UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('message')
 export class MessageController {
@@ -21,9 +21,15 @@ export class MessageController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createMessage(@Body() messageData: CreateMessageDto, @Req() req) {
-    const userId = req.user.id;
-    const message = await this.messageService.createMessage(messageData, userId);
+  async createMessage(
+    @Body() messageData: CreateMessageDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    const message = await this.messageService.createMessage(
+      messageData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo tin nhắn thành công',
@@ -35,10 +41,14 @@ export class MessageController {
   async updateMessage(
     @Param('id') id: string,
     @Body() messageData: UpdateMessageDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
-    const message = await this.messageService.updateMessage(id, messageData, userId);
+    const userId = req.user.userId;
+    const message = await this.messageService.updateMessage(
+      id,
+      messageData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật tin nhắn thành công',

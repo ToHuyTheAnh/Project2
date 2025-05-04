@@ -51,8 +51,8 @@ export class PostService {
     return this.prismaService.post.create({
       data: {
         ...dataToSave,
-        userId, 
-      }
+        userId,
+      },
     });
   }
 
@@ -106,7 +106,7 @@ export class PostService {
 
     return this.prismaService.post.update({
       where: { id },
-      data: {...dataToUpdate, userId} // Use the modified dataToUpdate object
+      data: { ...dataToUpdate, userId }, // Use the modified dataToUpdate object
     });
   }
 

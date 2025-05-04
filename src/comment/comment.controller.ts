@@ -13,7 +13,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
 import { UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('comment')
 export class CommentController {
@@ -21,9 +21,15 @@ export class CommentController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createComment(@Body() commentData: CreateCommentDto, @Req() req) {
-    const userId = req.user.id; 
-    const comment = await this.commentService.createComment(commentData, userId);
+  async createComment(
+    @Body() commentData: CreateCommentDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    const comment = await this.commentService.createComment(
+      commentData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Bình luận thành công',
@@ -36,10 +42,14 @@ export class CommentController {
   async updateComment(
     @Param('id') id: string,
     @Body() commentData: UpdateCommentDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
-    const comment = await this.commentService.updateComment(id, commentData, userId);
+    const userId = req.user.userId;
+    const comment = await this.commentService.updateComment(
+      id,
+      commentData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật bình luận thành công',
