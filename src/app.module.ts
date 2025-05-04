@@ -9,9 +9,13 @@ import { ChatboxModule } from './chatBox/chatBox.module';
 import { TrendTopicModule } from './trendTopic/trendTopic.module';
 import { ChatGatewayModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     PrismaModule,
     UserModule,
     PostModule,
