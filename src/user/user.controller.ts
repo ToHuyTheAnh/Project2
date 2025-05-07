@@ -8,9 +8,15 @@ import {
   Query,
   Patch,
   Post,
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 export class UserController {
@@ -25,8 +31,26 @@ export class UserController {
     };
   }
 
-  @Patch('update/:id')
-  async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDto) {
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('update')
+  async updateUser(
+    @Req() req,
+    @Body() userData: UpdateUserDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
+  ) {
+    const id = req.user.id;
+    if (file) {
+      userData.avatar = `/uploads/user-images/${file.filename}`;
+    } 
     const user = await this.userService.updateUser(id, userData);
     return {
       statusCode: HttpStatus.OK,
