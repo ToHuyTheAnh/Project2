@@ -19,8 +19,6 @@ import { extname } from 'path';
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
-      // Có thể thêm các tùy chọn khác như giới hạn kích thước file (limits)
-      // fileFilter: ... // Để lọc loại file
     }),
   ],
   providers: [PostService],

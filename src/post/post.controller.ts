@@ -40,21 +40,16 @@ export class PostController {
     file: Express.Multer.File | undefined,
     @Body() postData: CreatePostDto
   ) {
-    // --- DEBUGGING STEP ---
     console.log('--- PostController ---');
     console.log('Received file:', file ? file.originalname : 'No file');
-    console.log('Received postData:', postData); // <-- Add this log
-    // --- END DEBUGGING STEP ---
+    console.log('Received postData:', postData); 
 
-    // Check if postData is undefined BEFORE calling the service
     if (!postData) {
        console.error('postData is undefined or null in Controller!');
-       // You might want to throw an error here or handle it appropriately
-       // throw new BadRequestException('Post data is missing');
     }
 
 
-    const post = await this.postService.createPost(postData, file); // Line 43 (approx)
+    const post = await this.postService.createPost(postData, file); 
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -62,25 +57,23 @@ export class PostController {
     };
   }
 
-  // Other methods remain the same...
 
   @Patch('update/:id')
-  @UseInterceptors(FileInterceptor('image')) // Add interceptor for update too if needed
+  @UseInterceptors(FileInterceptor('image')) 
   async updatePost(
       @Param('id') id: string,
       @Body() postData: UpdatePostDto,
       @UploadedFile(
          new ParseFilePipe({
             validators: [
-               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
                new FileTypeValidator({ fileType: 'image/*' }),
             ],
-            fileIsRequired: false, // Important if updating without changing image
+            fileIsRequired: false, 
          }),
-      ) file?: Express.Multer.File // Make file optional here too
+      ) file?: Express.Multer.File 
    ) {
-      // Pass file to update service as well
-      const post = await this.postService.updatePost(id, postData, file); // Pass file here
+      const post = await this.postService.updatePost(id, postData, file); 
       return {
          statusCode: HttpStatus.OK,
          message: 'Cập nhật bài đăng thành công',
