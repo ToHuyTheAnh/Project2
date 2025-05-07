@@ -7,16 +7,29 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { CreateMessageDto, UpdateMessageDto } from './message.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createMessage(@Body() messageData: CreateMessageDto) {
-    const message = await this.messageService.createMessage(messageData);
+  async createMessage(
+    @Body() messageData: CreateMessageDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    const message = await this.messageService.createMessage(
+      messageData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo tin nhắn thành công',
@@ -28,8 +41,14 @@ export class MessageController {
   async updateMessage(
     @Param('id') id: string,
     @Body() messageData: UpdateMessageDto,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const message = await this.messageService.updateMessage(id, messageData);
+    const userId = req.user.userId;
+    const message = await this.messageService.updateMessage(
+      id,
+      messageData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật tin nhắn thành công',
@@ -42,12 +61,30 @@ export class MessageController {
     const messages = await this.messageService.getMessages();
     return {
       statusCode: HttpStatus.OK,
-      message: 'Lấy toàn bộ bình luận thành công',
+      message: 'Lấy toàn bộ tin nhắn thành công',
       data: messages,
     };
   }
 
-  @Get(':id')
+  @Get('/chat')
+  async getMessagesByChatBox(
+    @Query('chatBoxId') chatBoxId: string,
+    @Query('skip') skip: number = 0,
+    @Query('limit') limit: number = 20,
+  ) {
+    const messages = await this.messageService.getMessageByChatBox(
+      chatBoxId,
+      skip,
+      limit,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy tin nhắn thành công',
+      data: messages,
+    };
+  }
+
+  @Get('/:id')
   async getMessageById(@Param('id') id: string) {
     const message = await this.messageService.getMessageById(id);
     return {
@@ -57,7 +94,7 @@ export class MessageController {
     };
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   async deleteMessageById(@Param('id') id: string) {
     await this.messageService.deleteMessageById(id);
     return {

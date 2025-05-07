@@ -20,14 +20,20 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
   @UseInterceptors(FileInterceptor('image'))
   async createPost(
+    @Body() postData: CreatePostDto,
+    @Req() req: AuthenticatedRequest,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -38,7 +44,6 @@ export class PostController {
       }),
     )
     file: Express.Multer.File | undefined,
-    @Body() postData: CreatePostDto
   ) {
     console.log('--- PostController ---');
     console.log('Received file:', file ? file.originalname : 'No file');
@@ -56,7 +61,6 @@ export class PostController {
       data: post,
     };
   }
-
 
   @Patch('update/:id')
   @UseInterceptors(FileInterceptor('image')) 
@@ -102,8 +106,10 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('user-posts')
-  async getPostsByUserId(@Query('userId') userId: string) {
+  async getPostsByUserId(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
     const posts = await this.postService.getPostsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -127,6 +133,41 @@ export class PostController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy bài đăng thành công',
+      data: posts,
+    };
+  }
+
+  // Chia sẻ bài viết
+  @UseGuards(AuthGuard('jwt'))
+  @Post('share/:postId')
+  async sharePost(
+    @Param('postId') postId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    return this.postService.UserSharePost(postId, userId);
+  }
+
+  // Hủy chia sẻ bài viết
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('unshare/:postId')
+  async unsharePost(
+    @Param('postId') postId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    await this.postService.UserDeleteSharePost(postId, userId);
+  }
+
+  // Lấy danh sách bài viết đã chia sẻ của user
+  @UseGuards(AuthGuard('jwt'))
+  @Get('shared')
+  async getSharedPosts(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const posts = await this.postService.getPostShareByUserId(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài viết đã chia sẻ thành công',
       data: posts,
     };
   }

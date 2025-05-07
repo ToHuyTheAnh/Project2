@@ -1,12 +1,17 @@
 import { PostStatus } from '@prisma/client';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber } from 'class-validator';
-import { PartialType } from '@nestjs/mapped-types'
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+} from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreatePostDto {
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-  
+  // @IsString()
+  // @IsNotEmpty()
+  // userId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -34,7 +39,6 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   videoUrl?: string;
-
 }
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {}

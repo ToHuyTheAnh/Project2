@@ -8,19 +8,29 @@ import { Message } from '@prisma/client';
 export class MessageService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createMessage(messageData: CreateMessageDto): Promise<Message> {
+  async createMessage(
+    messageData: CreateMessageDto,
+    userId: string,
+  ): Promise<Message> {
     return this.prismaService.message.create({
-      data: messageData,
+      data: {
+        ...messageData,
+        userId,
+      },
     });
   }
 
   async updateMessage(
     id: string,
     messageData: UpdateMessageDto,
+    userId: string,
   ): Promise<Message> {
     return this.prismaService.message.update({
       where: { id },
-      data: messageData,
+      data: {
+        ...messageData,
+        userId,
+      },
     });
   }
 
@@ -36,12 +46,28 @@ export class MessageService {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Bình luận không tồn tại`,
+          message: `Tin nhắn không tồn tại`,
         },
         HttpStatus.NOT_FOUND,
       );
     }
     return message;
+  }
+
+  async getMessageByChatBox(
+    chatBoxId: string,
+    skip: number,
+    limit: number,
+  ): Promise<Message[]> {
+    const messages = await this.prismaService.message.findMany({
+      where: { chatBoxId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: skip,
+      take: limit,
+    });
+    return messages;
   }
 
   async deleteMessageById(id: string) {
@@ -52,7 +78,7 @@ export class MessageService {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Bình luận không tồn tại`,
+          message: `Tin nhắn không tồn tại`,
         },
         HttpStatus.NOT_FOUND,
       );

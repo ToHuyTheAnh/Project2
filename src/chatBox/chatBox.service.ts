@@ -34,7 +34,11 @@ export class ChatBoxService {
       return chatBox;
     }
     return this.prismaService.chatBox.create({
-      data: chatBoxData,
+      data: {
+        users: {
+          connect: userIds.map((id) => ({ id })),
+        },
+      },
     });
   }
 

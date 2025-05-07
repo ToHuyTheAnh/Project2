@@ -11,11 +11,15 @@ import { extname } from 'path';
   imports: [
     PrismaModule,
     MulterModule.register({
-      storage: diskStorage({ // Cấu hình lưu trữ vào disk
+      storage: diskStorage({
+        // Cấu hình lưu trữ vào disk
         destination: './uploads/post-images', // Thư mục lưu file
-        filename: (req, file, cb) => {
+        filename: (_req, file, cb) => {
           // Tạo tên file duy nhất
-          const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),

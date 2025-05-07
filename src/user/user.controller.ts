@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  Query,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -63,9 +64,9 @@ export class UserController {
     };
   }
 
-  @Post('follow/:followerId/:followingId')
+  @Post('follow/:followingId')
   async followUser(
-    @Param('followerId') followerId: string,
+    @Query('followerId') followerId: string,
     @Param('followingId') followingId: string
   ) {
     const follow = await this.userService.followUser(followerId, followingId);
