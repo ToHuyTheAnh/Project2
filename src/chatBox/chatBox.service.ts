@@ -1,29 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { PrismaService } from 'src/db/prisma.service';
-import { CreateChatBoxDto } from './chatBox.dto';
 import { ChatBox } from '@prisma/client';
 
 @Injectable()
 export class ChatBoxService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createChatBox(chatBoxData: CreateChatBoxDto): Promise<ChatBox> {
-    const { userIds } = chatBoxData;
-    if (userIds.length !== 2) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Chatbox chỉ cho phép nhắn tin giữa 2 người',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  async createChatBox(userId: string, partnerId: string): Promise<ChatBox> {
+    const participantIds = [userId, partnerId];
     const chatBox = await this.prismaService.chatBox.findFirst({
       where: {
         users: {
           every: {
-            id: { in: userIds },
+            id: { in: participantIds },
           },
         },
       },
@@ -36,14 +26,19 @@ export class ChatBoxService {
     return this.prismaService.chatBox.create({
       data: {
         users: {
-          connect: userIds.map((id) => ({ id })),
+          connect: participantIds.map((id) => ({ id })),
         },
       },
     });
   }
 
-  async getChatBoxs(): Promise<ChatBox[]> {
-    return this.prismaService.chatBox.findMany();
+  async getChatBoxesByUserId(userId: string): Promise<ChatBox[]> {
+    return this.prismaService.chatBox.findMany({
+      where: {
+        users: { some: { id: userId } },
+      },
+      include: { users: true, messages: true },
+    });
   }
 
   async getChatBoxById(id: string): Promise<ChatBox> {
