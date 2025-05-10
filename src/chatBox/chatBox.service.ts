@@ -9,6 +9,15 @@ export class ChatBoxService {
 
   async createChatBox(userId: string, partnerId: string): Promise<ChatBox> {
     const participantIds = [userId, partnerId];
+    if (userId === partnerId) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `Không thể tạo chatBox với bản thân`,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const chatBox = await this.prismaService.chatBox.findFirst({
       where: {
         users: {
