@@ -1,5 +1,3 @@
-// src/post/post.controller.ts
-
 import {
   Body,
   Controller,
@@ -15,13 +13,15 @@ import {
   ParseFilePipe,
   FileTypeValidator,
   MaxFileSizeValidator,
+  UseGuards, 
+  Req,      
+  HttpException, 
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
-import { UseGuards, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { AuthGuard } from '@nestjs/passport'; 
 import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('post')
@@ -30,31 +30,31 @@ export class PostController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image')) 
   async createPost(
     @Body() postData: CreatePostDto,
     @Req() req: AuthenticatedRequest,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: 'image/*' }),
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
+          new FileTypeValidator({ fileType: 'image/*' }), 
         ],
-        fileIsRequired: false,
+        fileIsRequired: false, 
       }),
     )
-    file: Express.Multer.File | undefined,
+    file?: Express.Multer.File, 
   ) {
     console.log('--- PostController ---');
     console.log('Received file:', file ? file.originalname : 'No file');
-    console.log('Received postData:', postData); 
+    console.log('Received postData:', postData);
 
     if (!postData) {
        console.error('postData is undefined or null in Controller!');
+       throw new HttpException('Dữ liệu bài đăng không hợp lệ', HttpStatus.BAD_REQUEST);
     }
-
-
-    const post = await this.postService.createPost(postData, file); 
+    const userId = req.user.userId; 
+    const post = await this.postService.createPost(postData, userId, file);
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -62,29 +62,31 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt')) 
   @Patch('update/:id')
-  @UseInterceptors(FileInterceptor('image')) 
+  @UseInterceptors(FileInterceptor('image'))
   async updatePost(
       @Param('id') id: string,
       @Body() postData: UpdatePostDto,
+      @Req() req: AuthenticatedRequest, 
       @UploadedFile(
          new ParseFilePipe({
             validators: [
-               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
+               new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
                new FileTypeValidator({ fileType: 'image/*' }),
             ],
-            fileIsRequired: false, 
+            fileIsRequired: false,
          }),
-      ) file?: Express.Multer.File 
+      ) file?: Express.Multer.File,
    ) {
-      const post = await this.postService.updatePost(id, postData, file); 
+      const userId = req.user.userId;
+      const post = await this.postService.updatePost(id, postData, userId, file);
       return {
          statusCode: HttpStatus.OK,
          message: 'Cập nhật bài đăng thành công',
          data: post,
       };
    }
-
 
   @Get()
   async getPosts() {
@@ -107,9 +109,8 @@ export class PostController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('user-posts')
-  async getPostsByUserId(@Req() req: AuthenticatedRequest) {
-    const userId = req.user.userId;
+  @Get('user-posts/:userId') 
+  async getPostsByUserId(@Param('userId') userId: string) {
     const posts = await this.postService.getPostsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -118,26 +119,30 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt')) 
   @Delete(':id')
-  async deletePostById(@Param('id') id: string) {
-    await this.postService.deletePostById(id);
+  async deletePostById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    await this.postService.deletePostById(id, userId /*, req.user.isAdmin */);
     return {
       statusCode: HttpStatus.OK,
       message: 'Xóa bài đăng thành công',
     };
   }
 
-  @Get('search')
+  @Get('search') 
   async searchPostByKeyword(@Query('keyword') keyword: string) {
+    if (!keyword || keyword.trim() === "") {
+        throw new HttpException('Từ khóa tìm kiếm không được để trống', HttpStatus.BAD_REQUEST);
+    }
     const posts = await this.postService.searchPostByKeyword(keyword);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Lấy bài đăng thành công',
+      message: `Kết quả tìm kiếm cho từ khóa "${keyword}"`,
       data: posts,
     };
   }
 
-  // Chia sẻ bài viết
   @UseGuards(AuthGuard('jwt'))
   @Post('share/:postId')
   async sharePost(
@@ -145,10 +150,13 @@ export class PostController {
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.userId;
-    return this.postService.UserSharePost(postId, userId);
+    const result = await this.postService.userSharePost(postId, userId);
+    return {
+        statusCode: HttpStatus.OK,
+        ...result 
+    };
   }
 
-  // Hủy chia sẻ bài viết
   @UseGuards(AuthGuard('jwt'))
   @Delete('unshare/:postId')
   async unsharePost(
@@ -156,19 +164,42 @@ export class PostController {
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.userId;
-    await this.postService.UserDeleteSharePost(postId, userId);
+    await this.postService.userDeleteSharePost(postId, userId);
+    return {
+        statusCode: HttpStatus.OK,
+        message: 'Hủy chia sẻ bài viết thành công'
+    }
   }
 
-  // Lấy danh sách bài viết đã chia sẻ của user
   @UseGuards(AuthGuard('jwt'))
-  @Get('shared')
-  async getSharedPosts(@Req() req: AuthenticatedRequest) {
-    const userId = req.user.userId;
+  @Get('shared/:userId') 
+  async getSharedPosts(@Param('userId') userId: string /* @Req() req: AuthenticatedRequest */) {
+    // const userId = req.user.userId; // Nếu muốn lấy bài của chính user đang đăng nhập
     const posts = await this.postService.getPostShareByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy bài viết đã chia sẻ thành công',
       data: posts,
+    };
+  }
+
+  // --- Thêm API endpoint banPost ---
+  /**
+   * API endpoint để ban một bài đăng.
+   * Chỉ có Admin mới có quyền thực hiện. (Cần implement RoleGuard)
+   * @param id ID của bài đăng cần ban.
+   */
+  @Patch(':id/ban')
+  @UseGuards(AuthGuard('jwt')) 
+  // @Roles(UserRole.Admin) // Ví dụ nếu bạn có decorator @Roles và enum UserRole từ schema
+  async banPost(@Param('id') id: string /*, @Req() req: AuthenticatedRequest */) {
+    // const requestingUser = req.user; // Lấy thông tin admin thực hiện
+    // Thêm logic kiểm tra quyền admin ở đây nếu chưa có RoleGuard
+    const bannedPost = await this.postService.banPost(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Ban bài đăng thành công',
+      data: bannedPost,
     };
   }
 }

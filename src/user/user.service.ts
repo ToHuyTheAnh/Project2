@@ -1,8 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
-import { User } from '@prisma/client';
+import { User, UserStatus } from '@prisma/client'; 
 
 @Injectable()
 export class UserService {
@@ -61,7 +60,7 @@ export class UserService {
 
   async followUser(followerId: string, followingId: string) {
     if (followerId === followingId) {
-      throw new Error('Không thể theo dõi chính mình.');
+      throw new HttpException('Không thể theo dõi chính mình.', HttpStatus.BAD_REQUEST);
     }
 
     const existingFollow = await this.prismaService.userFollow.findFirst({
@@ -75,8 +74,7 @@ export class UserService {
       await this.prismaService.userFollow.delete({
         where: { id: existingFollow.id },
       });
-
-      return { message: 'Đã hủy theo dõi!!!' };
+      return { message: 'Đã hủy theo dõi!' }; // Sửa chính tả
     }
 
     await this.prismaService.userFollow.create({
@@ -85,35 +83,69 @@ export class UserService {
         followingId,
       },
     });
-
-    return { massage: 'Theo dõi thành công!!!' };
+    return { message: 'Theo dõi thành công!' }; // Sửa chính tả
   }
 
-  // lấy ra tất cả những người mình follow.
   async getFollowing(userId: string) {
     const followings = await this.prismaService.userFollow.findMany({
       where: { followerId: userId },
-      select: { following: true },
+      select: { following: true }, 
     });
 
-    if(!followings){
-      return {message: "Không có ai theo dõi bạn!!!"}
-    }
-
-    return followings;
+    // if (!followings || followings.length === 0) { // Kiểm tra mảng rỗng
+    //   return { message: "Bạn chưa theo dõi ai!" };
+    // }
+    return followings.map(f => f.following); 
   }
 
-  // lấy ra tất cả những người follow mình.
   async getFollowers(userId: string) {
     const followers = await this.prismaService.userFollow.findMany({
       where: { followingId: userId },
-      select: { follower: true },
+      select: { follower: true }, 
     });
 
-    if(!followers){
-      return {message: "Bạn không theo dõi người khác!!!"}
+    // if (!followers || followers.length === 0) { // Kiểm tra mảng rỗng
+    //   return { message: "Chưa có ai theo dõi bạn!" };
+    // }
+    return followers.map(f => f.follower); 
+  }
+
+  // --- Thêm phương thức banUser ---
+  /**
+   * Ban một tài khoản người dùng.
+   * @param userId ID của người dùng cần ban.
+   * @returns Thông tin người dùng đã được cập nhật.
+   */
+  async banUser(userId: string): Promise<User> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `User không tồn tại`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
-    return followers;
+    // Kiểm tra nếu user đã bị ban rồi thì không cần cập nhật nữa (tùy chọn)
+    if (user.status === UserStatus.Banned) {
+        throw new HttpException(
+        {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: `User này đã bị ban trước đó.`,
+        },
+        HttpStatus.BAD_REQUEST,
+        );
+    }
+
+    return this.prismaService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.Banned }, // Sử dụng enum UserStatus
+    });
   }
+  // --- Kết thúc phương thức banUser ---
 }
