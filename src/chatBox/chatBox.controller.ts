@@ -6,16 +6,26 @@ import {
   HttpStatus,
   Param,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ChatBoxService } from './chatBox.service';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 import { CreateChatBoxDto } from './chatBox.dto';
 
 @Controller('chatBox')
 export class ChatBoxController {
   constructor(private readonly chatBoxService: ChatBoxService) {}
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createChatBox(@Body() chatBoxData: CreateChatBoxDto) {
-    const chatBox = await this.chatBoxService.createChatBox(chatBoxData);
+  async createChatBox(
+    @Body() chatBoxData: CreateChatBoxDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    const { partnerId } = chatBoxData;
+    const chatBox = await this.chatBoxService.createChatBox(userId, partnerId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo chatbox thành công',
@@ -23,12 +33,14 @@ export class ChatBoxController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
-  async getChatBoxs() {
-    const chatBoxs = await this.chatBoxService.getChatBoxs();
+  async getChatBoxs(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const chatBoxs = await this.chatBoxService.getChatBoxesByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Hiển thị toàn bộ chatbox thành công',
+      message: 'Hiển thị toàn bộ chatbox của user thành công',
       data: chatBoxs,
     };
   }
