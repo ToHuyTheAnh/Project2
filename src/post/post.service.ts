@@ -1,9 +1,22 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
-import { Post, PostStatus, UserSharePost } from '@prisma/client'; // <<< Thêm PostStatus
+import { Post, PostStatus, UserSharePost } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const deleteFileIfExists = (filePath: string | null | undefined) => {
+  if (!filePath) return;
+  const fullPath = path.join(process.cwd(), 'public', filePath); 
+  try {
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+      console.log(`Deleted file: ${fullPath}`);
+    }
+  } catch (err) {
+    console.error(`Error deleting file ${fullPath}:`, err);
+  }
+};
 
 @Injectable()
 export class PostService {
@@ -11,39 +24,44 @@ export class PostService {
 
   async createPost(postData: CreatePostDto, userId: string, file?: Express.Multer.File): Promise<Post> {
     console.log('--- PostService ---');
-    console.log('Entered createPost with postData:', postData);
-    console.log('Entered createPost with file:', file ? file.originalname : 'No file');
-    console.log('User ID creating post:', userId);
-
+    console.log('CreatePost - Received file:', file ? `${file.originalname} (${file.mimetype})` : 'No file');
 
     if (!postData) {
-        console.error("postData is undefined or null at the start of PostService.createPost!");
         throw new HttpException('Received invalid post data', HttpStatus.BAD_REQUEST);
     }
     if (!userId) {
-        console.error("userId is undefined or null in PostService.createPost!");
-        throw new HttpException('User ID is required to create a post', HttpStatus.UNAUTHORIZED); // Hoặc BAD_REQUEST
+        throw new HttpException('User ID is required to create a post', HttpStatus.UNAUTHORIZED);
     }
 
-
-    const dataToSave: any = { ...postData, userId }; // Gán userId vào đây
-
+    const dataToSave: any = {
+        ...postData,
+        userId,
+        imageUrl: postData.imageUrl || null, 
+        videoUrl: postData.videoUrl || null,
+    };
 
     if (file) {
-      dataToSave.imageUrl = `/uploads/post-images/${file.filename}`; // Đường dẫn tương đối từ thư mục public
-    } else if (postData.imageUrl) {
-       dataToSave.imageUrl = postData.imageUrl; 
-    } else {
-      dataToSave.imageUrl = null; 
-    }
-    
-    if (!dataToSave.trendTopicId) {
-        // Gán một trendTopicId mặc định hoặc throw error nếu nó là bắt buộc
-        // Ví dụ: dataToSave.trendTopicId = 'default-topic-id';
-        // Hoặc: throw new HttpException('Trend Topic ID is required', HttpStatus.BAD_REQUEST);
-        // Hiện tại, schema của bạn có vẻ yêu cầu trendTopicId
+        const relativePath = file.path.substring(file.path.indexOf(path.join('uploads'))).replace(/\\/g, '/'); 
+        const finalUrl = `/${relativePath}`; 
+
+        if (file.mimetype.startsWith('image')) {
+            dataToSave.imageUrl = finalUrl;
+            dataToSave.videoUrl = null; 
+            console.log(`Saving image URL: ${finalUrl}`);
+        } else if (file.mimetype.startsWith('video')) {
+            dataToSave.videoUrl = finalUrl;
+            dataToSave.imageUrl = null; 
+            console.log(`Saving video URL: ${finalUrl}`);
+        }
     }
 
+    if(dataToSave.imageUrl === undefined) delete dataToSave.imageUrl;
+    if(dataToSave.videoUrl === undefined) delete dataToSave.videoUrl;
+
+    if (!dataToSave.trendTopicId) {
+    }
+
+    console.log('Data being saved to DB:', dataToSave);
 
     return this.prismaService.post.create({
       data: dataToSave,
@@ -56,43 +74,64 @@ export class PostService {
         throw new HttpException('Bài đăng không tồn tại', HttpStatus.NOT_FOUND);
      }
 
-     // Kiểm tra quyền: chỉ chủ bài đăng hoặc admin mới được sửa
-     // if (post.userId !== userId && !userIsAdmin) { // userIsAdmin là biến boolean kiểm tra quyền admin
+     // --- Kiểm tra quyền ---
+     // if (post.userId !== userId /* && !userIsAdmin */) {
      //    throw new HttpException('Bạn không có quyền chỉnh sửa bài đăng này', HttpStatus.FORBIDDEN);
      // }
 
-
      const dataToUpdate: any = { ...postData };
-     const oldImageUrl = post?.imageUrl;
+     const oldImageUrl = post.imageUrl;
+     const oldVideoUrl = post.videoUrl;
 
      if (file) {
-       dataToUpdate.imageUrl = `/uploads/post-images/${file.filename}`;
-       if (oldImageUrl) {
-         const oldImagePath = path.join(process.cwd(), 'public', oldImageUrl); // Giả sử ảnh nằm trong public
-         try {
-           if (fs.existsSync(oldImagePath)) {
-              fs.unlinkSync(oldImagePath);
-              console.log(`Deleted old image: ${oldImageUrl}`);
-           }
-         } catch (err) {
-           console.error(`Error deleting old image ${oldImageUrl}:`, err);
-         }
-       }
-     } else if (postData.imageUrl !== undefined) { 
-        dataToUpdate.imageUrl = postData.imageUrl;
-        if ((postData.imageUrl === null || postData.imageUrl === "") && oldImageUrl) {
-            const oldImagePath = path.join(process.cwd(), 'public', oldImageUrl);
-             try {
-               if (fs.existsSync(oldImagePath)) {
-                  fs.unlinkSync(oldImagePath);
-                  console.log(`Deleted old image due to update: ${oldImageUrl}`);
-               }
-             } catch (err) {
-               console.error(`Error deleting old image ${oldImageUrl}:`, err);
-             }
+        const relativePath = file.path.substring(file.path.indexOf(path.join('uploads'))).replace(/\\/g, '/');
+        const finalUrl = `/${relativePath}`;
+
+        if (file.mimetype.startsWith('image')) {
+            dataToUpdate.imageUrl = finalUrl;
+            dataToUpdate.videoUrl = null; 
+            deleteFileIfExists(oldVideoUrl); 
+            deleteFileIfExists(oldImageUrl); 
+            console.log(`Updating with new image: ${finalUrl}`);
+        } else if (file.mimetype.startsWith('video')) {
+            dataToUpdate.videoUrl = finalUrl;
+            dataToUpdate.imageUrl = null; 
+            deleteFileIfExists(oldImageUrl); 
+            deleteFileIfExists(oldVideoUrl); 
+            console.log(`Updating with new video: ${finalUrl}`);
+        }
+     } else {
+        if (postData.imageUrl !== undefined) {
+            dataToUpdate.imageUrl = postData.imageUrl;
+            if(dataToUpdate.imageUrl === null || dataToUpdate.imageUrl === "") {
+                deleteFileIfExists(oldImageUrl); 
+                if(oldVideoUrl) dataToUpdate.videoUrl = oldVideoUrl; 
+            } else {
+                 if(oldVideoUrl) {
+                    dataToUpdate.videoUrl = null;
+                    deleteFileIfExists(oldVideoUrl);
+                 }
+            }
+        }
+         if (postData.videoUrl !== undefined) { 
+            dataToUpdate.videoUrl = postData.videoUrl;
+             if(dataToUpdate.videoUrl === null || dataToUpdate.videoUrl === "") {
+                deleteFileIfExists(oldVideoUrl); 
+                if(oldImageUrl) dataToUpdate.imageUrl = oldImageUrl; 
+            } else {
+                 if(oldImageUrl) {
+                    dataToUpdate.imageUrl = null;
+                    deleteFileIfExists(oldImageUrl);
+                 }
+            }
         }
      }
 
+    if(dataToUpdate.imageUrl === undefined && !file?.mimetype.startsWith('image')) delete dataToUpdate.imageUrl;
+    if(dataToUpdate.videoUrl === undefined && !file?.mimetype.startsWith('video')) delete dataToUpdate.videoUrl;
+
+
+    console.log('Data being updated in DB:', dataToUpdate);
 
     return this.prismaService.post.update({
       where: { id },
@@ -100,9 +139,9 @@ export class PostService {
     });
   }
 
-  async getPosts(): Promise<Post[]> {
+   async getPosts(): Promise<Post[]> {
     return this.prismaService.post.findMany({
-        where: { status: PostStatus.Published }, 
+        where: { status: PostStatus.Published },
         orderBy: { createdAt: 'desc'}
     });
   }
@@ -110,12 +149,15 @@ export class PostService {
   async getPostById(id: string): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id },
+       include: { user: { select: { id: true, displayName: true, avatar: true } } } 
     });
-    if (!post || post.status !== PostStatus.Published) { 
+    // Cho phép xem bài bị ban/deleted nếu có link trực tiếp? Hoặc chỉ admin? Tùy logic
+    // if (!post || (post.status !== PostStatus.Published && post.status !== PostStatus.Banned /* && !userIsAdmin */)) {
+    if (!post || post.status === PostStatus.Deleted) { 
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Bài đăng không tồn tại hoặc chưa được duyệt`,
+          message: `Bài đăng không tồn tại hoặc đã bị xóa`,
         },
         HttpStatus.NOT_FOUND,
       );
@@ -128,17 +170,12 @@ export class PostService {
       where: { id: userId },
     });
     if (!user) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `User không tồn tại`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`User không tồn tại`, HttpStatus.NOT_FOUND);
     }
     return this.prismaService.post.findMany({
-      where: { userId, status: PostStatus.Published }, // Chỉ lấy bài đã publish của user
-      orderBy: { createdAt: 'desc'}
+      where: { userId, status: PostStatus.Published }, // Chỉ lấy bài published
+      orderBy: { createdAt: 'desc'},
+       include: { user: { select: { id: true, displayName: true, avatar: true } } }
     });
   }
 
@@ -147,64 +184,44 @@ export class PostService {
       where: { id },
     });
     if (!post) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `Bài đăng không tồn tại`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`Bài đăng không tồn tại`, HttpStatus.NOT_FOUND);
     }
 
-    // Kiểm tra quyền: chủ bài đăng hoặc admin mới được xóa
-    // if (post.userId !== userId && !userIsAdmin) {
+    // --- Kiểm tra quyền ---
+    // if (post.userId !== userId /* && !userIsAdmin */) {
     //    throw new HttpException('Bạn không có quyền xóa bài đăng này', HttpStatus.FORBIDDEN);
     // }
 
-    // Thay vì xóa hẳn, có thể đổi status thành Deleted
+    // --- Xóa file ảnh và video liên quan ---
+    deleteFileIfExists(post.imageUrl);
+    deleteFileIfExists(post.videoUrl);
+
+    // --- Xóa bài đăng khỏi DB ---
+    // Lưu ý: Do có `onDelete: Cascade` ở Comment và Reaction, các bản ghi liên quan cũng sẽ bị xóa.
+    // UserSharePost cũng nên có onDelete: Cascade để xóa khi post bị xóa.
+    await this.prismaService.post.delete({
+      where: { id },
+    });
+
+     // --- Hoặc: Cập nhật status thành Deleted ---
     // await this.prismaService.post.update({
     //   where: { id },
     //   data: { status: PostStatus.Deleted },
     // });
-
-    if (post.imageUrl) {
-        const imagePath = path.join(process.cwd(), 'public', post.imageUrl);
-        try {
-            if(fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-                console.log(`Deleted image of post ${id}: ${post.imageUrl}`);
-            }
-        } catch (err) {
-            console.error(`Error deleting image for post ${id}:`, err);
-        }
-    }
-    await this.prismaService.post.delete({
-      where: { id },
-    });
   }
 
-  async searchPostByKeyword(keyword: string): Promise<Post[]> {
+   async searchPostByKeyword(keyword: string): Promise<Post[]> {
     const posts = await this.prismaService.post.findMany({
       where: {
-        status: PostStatus.Published, // Chỉ tìm trong các bài đã published
+        status: PostStatus.Published,
         OR: [
           { title: { contains: keyword } },
           { content: { contains: keyword } },
         ],
       },
-      orderBy: { createdAt: 'desc'}
+      orderBy: { createdAt: 'desc'},
+       include: { user: { select: { id: true, displayName: true, avatar: true } } }
     });
-
-    // Không nên throw lỗi nếu không tìm thấy, trả về mảng rỗng là đủ
-    // if (posts.length === 0) {
-    //   throw new HttpException(
-    //     {
-    //       statusCode: HttpStatus.NOT_FOUND,
-    //       message: 'Không tìm thấy bài viết nào phù hợp',
-    //     },
-    //     HttpStatus.NOT_FOUND,
-    //   );
-    // }
     return posts;
   }
 
@@ -213,41 +230,23 @@ export class PostService {
     userId: string,
   ): Promise<{ message: string; data: UserSharePost }> {
     const post = await this.prismaService.post.findUnique({
-      where: { id: postId, status: PostStatus.Published }, 
+      where: { id: postId, status: PostStatus.Published },
     });
 
     if (!post) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'Bài đăng không tồn tại hoặc chưa được duyệt',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException('Bài đăng không tồn tại hoặc chưa được duyệt', HttpStatus.NOT_FOUND);
     }
 
     const alreadyShared = await this.prismaService.userSharePost.findFirst({
-      where: {
-        postId,
-        userId,
-      },
+      where: { postId, userId },
     });
 
     if (alreadyShared) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.CONFLICT,
-          message: 'Bạn đã chia sẻ bài viết này rồi.',
-        },
-        HttpStatus.CONFLICT,
-      );
+      throw new HttpException('Bạn đã chia sẻ bài viết này rồi.', HttpStatus.CONFLICT);
     }
 
     const sharedPost = await this.prismaService.userSharePost.create({
-      data: {
-        postId,
-        userId,
-      },
+      data: { postId, userId },
     });
     return {
       message: 'Chia sẻ bài viết thành công',
@@ -257,99 +256,68 @@ export class PostService {
 
   async userDeleteSharePost(postId: string, userId: string): Promise<void> {
     const sharedEntry = await this.prismaService.userSharePost.findFirst({
-      where: {
-        postId,
-        userId,
-      },
+      where: { postId, userId },
     });
 
     if (!sharedEntry) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND, 
-          message: 'Bạn chưa chia sẻ bài viết này.',
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException('Bạn chưa chia sẻ bài viết này.', HttpStatus.NOT_FOUND);
     }
 
     await this.prismaService.userSharePost.delete({
-      where: { id: sharedEntry.id }, 
+      where: { id: sharedEntry.id },
     });
   }
 
   async getPostShareByUserId(userId: string): Promise<Post[]> {
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `User không tồn tại`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const userSharePosts = await this.prismaService.userSharePost.findMany({
-      where: { userId },
-      include: { post: true }, 
-      orderBy: { createdAt: 'desc'}
-    });
+     const user = await this.prismaService.user.findUnique({ where: { id: userId } });
+     if (!user) {
+       throw new HttpException(`User không tồn tại`, HttpStatus.NOT_FOUND);
+     }
+     const userSharePosts = await this.prismaService.userSharePost.findMany({
+       where: { userId },
+       include: {
+         post: { // Include bài post gốc
+            include: { user: { select: { id: true, displayName: true, avatar: true } } } // Include cả user của post gốc
+         }
+       },
+       orderBy: { createdAt: 'desc'}
+     });
 
-    const posts: Post[] = userSharePosts.map(sharedPost => {
-      if (!sharedPost.post || sharedPost.post.status !== PostStatus.Published) {
+     return userSharePosts.map(sharedPost => {
+       if (!sharedPost.post || sharedPost.post.status !== PostStatus.Published) {
+         return {
+           id: sharedPost.postId,
+           title: 'Bài viết không còn khả dụng',
+           content: '',
+           userId: 'unknown',
+           trendTopicId: 'unknown',
+           status: PostStatus.Deleted,
+           imageUrl: null,
+           videoUrl: null,
+           createdAt: sharedPost.createdAt, 
+           updatedAt: sharedPost.updatedAt,
+           comments: [],
+           reactions: [],
+           sharedById: [],
+           user: { id: 'unknown', displayName: 'Người dùng không xác định', avatar: null }
+         } as unknown as Post;
+       }
+       return sharedPost.post; 
+     }).filter(post => post !== null); 
+   }
 
-        return {
-          id: sharedPost.postId,
-          title: 'Bài viết không còn khả dụng',
-          content: 'Nội dung đã bị ẩn hoặc xóa.',
-          userId: sharedPost.post?.userId || 'unknown', 
-          trendTopicId: sharedPost.post?.trendTopicId || 'unknown',
-          status: PostStatus.Deleted, 
-          imageUrl: null,
-          videoUrl: null,
-          createdAt: sharedPost.post?.createdAt || sharedPost.createdAt, 
-          updatedAt: sharedPost.post?.updatedAt || sharedPost.createdAt,
-          comments: [],
-          reactions: [],
-          sharedById: []
-        } as unknown as Post;
-      }
-      return sharedPost.post;
-    });
-    return posts;
-  }
 
-  // --- Thêm phương thức banPost ---
-  /**
-   * Ban một bài đăng.
-   * @param postId ID của bài đăng cần ban.
-   * @returns Thông tin bài đăng đã được cập nhật.
-   */
   async banPost(postId: string): Promise<Post> {
     const post = await this.prismaService.post.findUnique({
       where: { id: postId },
     });
 
     if (!post) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.NOT_FOUND,
-          message: `Bài đăng không tồn tại`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`Bài đăng không tồn tại`, HttpStatus.NOT_FOUND);
     }
 
     if (post.status === PostStatus.Banned) {
-         throw new HttpException(
-        {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: `Bài đăng này đã bị ban trước đó.`,
-        },
-        HttpStatus.BAD_REQUEST,
-        );
+         throw new HttpException(`Bài đăng này đã bị ban trước đó.`, HttpStatus.BAD_REQUEST);
     }
 
     return this.prismaService.post.update({
