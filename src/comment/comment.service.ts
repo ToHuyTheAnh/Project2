@@ -8,12 +8,15 @@ import { Comment } from '@prisma/client';
 export class CommentService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createComment(commentData: CreateCommentDto, userId: string): Promise<Comment> {
+  async createComment(
+    commentData: CreateCommentDto,
+    userId: string,
+  ): Promise<Comment> {
     return this.prismaService.comment.create({
       data: {
         ...commentData,
         userId,
-      }
+      },
     });
   }
 
@@ -27,7 +30,7 @@ export class CommentService {
       data: {
         ...commentData,
         userId,
-      }
+      },
     });
   }
 

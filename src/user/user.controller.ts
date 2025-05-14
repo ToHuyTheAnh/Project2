@@ -8,19 +8,14 @@ import {
   Query,
   Patch,
   Post,
-  UploadedFile,
-  ParseFilePipe,
-  FileTypeValidator,
-  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
-import { UseGuards, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
   @Post('/create')
   async createUser(@Body() userData: CreateUserDto) {
     const user = await this.userService.createUser(userData);
@@ -31,26 +26,8 @@ export class UserController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Patch('update')
-  async updateUser(
-    @Req() req,
-    @Body() userData: UpdateUserDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
-          new FileTypeValidator({ fileType: 'image/*' }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    file?: Express.Multer.File,
-  ) {
-    const id = req.user.id;
-    if (file) {
-      userData.avatar = `/uploads/user-images/${file.filename}`;
-    } 
+  @Patch('update/:id')
+  async updateUser(@Param('id') id: string, @Body() userData: UpdateUserDto) {
     const user = await this.userService.updateUser(id, userData);
     return {
       statusCode: HttpStatus.OK,
@@ -60,6 +37,7 @@ export class UserController {
   }
 
   @Get()
+  // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này nếu không phải public
   async getUsers() {
     const users = await this.userService.getUsers();
     return {
@@ -70,6 +48,7 @@ export class UserController {
   }
 
   @Get(':id')
+  // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này
   async getUserById(@Param('id') id: string) {
     const user = await this.userService.getUserById(id);
     return {
@@ -80,6 +59,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  // @UseGuards(AuthGuard('jwt')) // Cần bảo vệ route này, và kiểm tra quyền (admin)
   async deleteUserById(@Param('id') id: string) {
     await this.userService.deleteUserById(id);
     return {
@@ -88,36 +68,60 @@ export class UserController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt')) // Bảo vệ route này
   @Post('follow/:followingId')
   async followUser(
-    @Query('followerId') followerId: string,
-    @Param('followingId') followingId: string
+    // @Query('followerId') followerId: string, // Nên lấy followerId từ user đã xác thực
+    @Req() req: AuthenticatedRequest,
+    @Param('followingId') followingId: string,
   ) {
-    const follow = await this.userService.followUser(followerId, followingId);
+    const followerId = req.user.userId; // Lấy userId của người thực hiện hành động
+    const result = await this.userService.followUser(followerId, followingId);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Theo dõi thành công',
-      data: follow,
+      // message: 'Thao tác theo dõi/hủy theo dõi thành công', // Thông báo chung hơn
+      data: result, 
     };
   }
 
-  @Get('following/:id')
-  async getFollowing(@Param('id') id: string) {
-    const followings = await this.userService.getFollowing(id);
+  @Get('following/:userId') 
+  // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ nếu cần
+  async getFollowing(@Param('userId') userId: string) {
+    const followings = await this.userService.getFollowing(userId);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Lấy danh sách người theo dõi thành công', 
-      data: followings, 
+      message: 'Lấy danh sách người đang theo dõi thành công',
+      data: followings,
     };
   }
 
-  @Get('followers/:id')
-  async getFollowers(@Param('id') id: string) {
-    const followers = await this.userService.getFollowers(id);
+  @Get('followers/:userId') 
+  async getFollowers(@Param('userId') userId: string) {
+    const followers = await this.userService.getFollowers(userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy danh sách người theo dõi thành công',
       data: followers,
+    };
+  }
+
+  // --- Thêm API endpoint banUser ---
+  /**
+   * API endpoint để ban một tài khoản người dùng.
+   * Chỉ có Admin mới có quyền thực hiện. (Cần implement RoleGuard)
+   * @param id ID của người dùng cần ban.
+   */
+  @Patch(':id/ban')
+  @UseGuards(AuthGuard('jwt')) 
+  // @Roles(UserRole.Admin) // Ví dụ nếu bạn có decorator @Roles và enum UserRole
+  async banUser(@Param('id') id: string) {
+    // const requestingUser = req.user; // Lấy thông tin admin thực hiện
+    // Thêm logic kiểm tra quyền admin ở đây nếu chưa có RoleGuard
+    const bannedUser = await this.userService.banUser(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Ban tài khoản thành công',
+      data: bannedUser,
     };
   }
 }

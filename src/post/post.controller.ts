@@ -15,13 +15,48 @@ import {
   ParseFilePipe,
   FileTypeValidator,
   MaxFileSizeValidator,
+  UseGuards,
+  Req,
+  HttpException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { PostService } from './post.service';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
-import { UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
+import { diskStorage } from 'multer'; 
+import * as path from 'path';     
+import * as fs from 'fs';     
+
+const ensureDirExists = (dirPath: string) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+const storage = diskStorage({
+  destination: (req, file, cb) => {
+    let uploadPath = path.join(process.cwd(), 'public', 'uploads');
+    let subDir = 'others'; 
+
+    if (file.mimetype.startsWith('image')) {
+      subDir = 'post-images';
+    } else if (file.mimetype.startsWith('video')) {
+      subDir = 'post-videos';
+    }
+
+    const finalPath = path.join(uploadPath, subDir);
+    ensureDirExists(finalPath);
+    cb(null, finalPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+  },
+});
+
 
 @Controller('post')
 export class PostController {
@@ -29,37 +64,39 @@ export class PostController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('mediaFile', { 
+      storage: storage, 
+      fileFilter: (req, file, cb) => { 
+          if (file.mimetype.startsWith('image') || file.mimetype.startsWith('video')) {
+              cb(null, true);
+          } else {
+              cb(new HttpException('Chỉ chấp nhận file ảnh hoặc video!', HttpStatus.BAD_REQUEST), false);
+          }
+      }
+  }))
   async createPost(
     @Body() postData: CreatePostDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: 'image/*' }),
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^(image\/(jpeg|png|gif|webp)|video\/(mp4|quicktime|webm|ogg))$/ }),
         ],
-        fileIsRequired: false,
+        fileIsRequired: false, 
       }),
     )
-    file: Express.Multer.File | undefined,
-
+    file?: Express.Multer.File, 
   ) {
-    // --- DEBUGGING STEP ---
     console.log('--- PostController ---');
-    console.log('Received file:', file ? file.originalname : 'No file');
-    console.log('Received postData:', postData); // <-- Add this log
-    // --- END DEBUGGING STEP ---
+    console.log('Received file:', file ? `${file.originalname} (${file.mimetype})` : 'No file');
+    console.log('Received postData:', postData);
 
-    // Check if postData is undefined BEFORE calling the service
     if (!postData) {
-      console.error('postData is undefined or null in Controller!');
-      // You might want to throw an error here or handle it appropriately
-      // throw new BadRequestException('Post data is missing');
+       throw new HttpException('Dữ liệu bài đăng không hợp lệ', HttpStatus.BAD_REQUEST);
     }
-
-    const userId = req.user.id; 
-    const post = await this.postService.createPost(postData, userId, file); // Line 43 (approx)
+    const userId = req.user.userId;
+    const post = await this.postService.createPost(postData, userId, file);
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo bài đăng thành công',
@@ -67,34 +104,41 @@ export class PostController {
     };
   }
 
-  // Other methods remain the same...
   @UseGuards(AuthGuard('jwt'))
   @Patch('update/:id')
-  @UseInterceptors(FileInterceptor('image')) // Add interceptor for update too if needed
+  @UseInterceptors(FileInterceptor('mediaFile', { 
+      storage: storage,
+      fileFilter: (req, file, cb) => {
+          if (file.mimetype.startsWith('image') || file.mimetype.startsWith('video')) {
+              cb(null, true);
+          } else {
+              cb(new HttpException('Chỉ chấp nhận file ảnh hoặc video!', HttpStatus.BAD_REQUEST), false);
+          }
+      }
+  }))
   async updatePost(
-    @Param('id') id: string,
-    @Body() postData: UpdatePostDto,
-    @Req() req,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
-          new FileTypeValidator({ fileType: 'image/*' }),
-        ],
-        fileIsRequired: false, // Important if updating without changing image
-      }),
-    )
-    file?: Express.Multer.File, // Make file optional here too
-  ) {
-    // Pass file to update service as well
-    const userId = req.user.id;
-    const post = await this.postService.updatePost(id, postData, userId, file); // Pass file here
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Cập nhật bài đăng thành công',
-      data: post,
-    };
-  }
+      @Param('id') id: string,
+      @Body() postData: UpdatePostDto,
+      @Req() req: AuthenticatedRequest,
+      @UploadedFile(
+         new ParseFilePipe({
+            validators: [
+               new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50MB
+               new FileTypeValidator({ fileType: /^(image\/(jpeg|png|gif|webp)|video\/(mp4|quicktime|webm|ogg))$/ }),
+            ],
+            fileIsRequired: false, 
+         }),
+      ) file?: Express.Multer.File,
+   ) {
+      const userId = req.user.userId;
+      const post = await this.postService.updatePost(id, postData, userId, file);
+      return {
+         statusCode: HttpStatus.OK,
+         message: 'Cập nhật bài đăng thành công',
+         data: post,
+      };
+   }
+
 
   @Get()
   async getPosts() {
@@ -117,9 +161,8 @@ export class PostController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('user-posts')
-  async getPostsByUserId(@Req() req) {
-    const userId = req.user.id;
+  @Get('user-posts/:userId')
+  async getPostsByUserId(@Param('userId') userId: string) {
     const posts = await this.postService.getPostsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -128,9 +171,11 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async deletePostById(@Param('id') id: string) {
-    await this.postService.deletePostById(id);
+  async deletePostById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    await this.postService.deletePostById(id, userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Xóa bài đăng thành công',
@@ -139,46 +184,65 @@ export class PostController {
 
   @Get('search')
   async searchPostByKeyword(@Query('keyword') keyword: string) {
+    if (!keyword || keyword.trim() === "") {
+        throw new HttpException('Từ khóa tìm kiếm không được để trống', HttpStatus.BAD_REQUEST);
+    }
     const posts = await this.postService.searchPostByKeyword(keyword);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Lấy bài đăng thành công',
+      message: `Kết quả tìm kiếm cho từ khóa "${keyword}"`,
       data: posts,
     };
   }
 
-  // Chia sẻ bài viết
   @UseGuards(AuthGuard('jwt'))
   @Post('share/:postId')
   async sharePost(
     @Param('postId') postId: string,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
-    return this.postService.UserSharePost(postId, userId);
+    const userId = req.user.userId;
+    const result = await this.postService.userSharePost(postId, userId);
+    return {
+        statusCode: HttpStatus.OK,
+        ...result
+    };
   }
 
-  // Hủy chia sẻ bài viết
   @UseGuards(AuthGuard('jwt'))
   @Delete('unshare/:postId')
   async unsharePost(
     @Param('postId') postId: string,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.id;
-    await this.postService.UserDeleteSharePost(postId, userId);
+    const userId = req.user.userId;
+    await this.postService.userDeleteSharePost(postId, userId);
+    return {
+        statusCode: HttpStatus.OK,
+        message: 'Hủy chia sẻ bài viết thành công'
+    }
   }
 
-  // Lấy danh sách bài viết đã chia sẻ của user
   @UseGuards(AuthGuard('jwt'))
-  @Get('shared')
-  async getSharedPosts(@Req() req) {
-    const userId = req.user.id;
+  @Get('shared/:userId')
+  async getSharedPosts(@Param('userId') userId: string) {
     const posts = await this.postService.getPostShareByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy bài viết đã chia sẻ thành công',
       data: posts,
+    };
+  }
+
+  @Patch(':id/ban')
+  @UseGuards(AuthGuard('jwt'))
+  // @Roles(UserRole.Admin) // Nhớ thêm RolesGuard
+  async banPost(@Param('id') id: string) {
+    const bannedPost = await this.postService.banPost(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Ban bài đăng thành công',
+      data: bannedPost,
     };
   }
 }

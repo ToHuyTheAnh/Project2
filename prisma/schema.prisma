@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -35,17 +36,18 @@ model User {
   avatar        String?
   emailVerified Boolean      @default(false)
   posts         Post[]       @relation("UserPost")
-  comments      Comment[]    
+  comments      Comment[]
   chatBoxes     ChatBox[]    @relation("UserChatBox")
   messages      Message[]
   followings    UserFollow[] @relation("UserFollowing") // Người mình đang theo dõi
   followers     UserFollow[] @relation("UserFollower") // Người đang theo dõi mình
-  
-  sharedPosts   UserSharePost[]
+
+  sharedPosts UserSharePost[]
 
   // timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Reaction  Reaction[]
 }
 
 enum PostStatus {
@@ -58,7 +60,7 @@ enum PostStatus {
 model Post {
   id           String     @id @default(cuid())
   userId       String
-  user         User       @relation("UserPost",fields: [userId], references: [id])
+  user         User       @relation("UserPost", fields: [userId], references: [id])
   trendTopicId String
   trendTopic   TrendTopic @relation(fields: [trendTopicId], references: [id])
   title        String
@@ -68,11 +70,12 @@ model Post {
   status       PostStatus
   comments     Comment[]
 
-  sharedById   UserSharePost[]
+  sharedById UserSharePost[]
 
   // timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Reaction  Reaction[]
 }
 
 enum CommentStatus {
@@ -151,16 +154,38 @@ model TrendTopic {
 }
 
 model UserSharePost {
-  id          String @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId      String
-  user        User   @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  postId      String
-  post        Post   @relation(fields: [postId], references: [id])
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, postId])
+}
+
+model Reaction {
+  id        String       @id @default(cuid())
+  type      ReactionType
+  postId    String
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([userId, postId])
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
 }

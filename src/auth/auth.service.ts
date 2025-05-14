@@ -7,7 +7,10 @@ import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+  ) {}
 
   async register(dto: RegisterDto) {
     const userExists = await this.prisma.user.findUnique({
@@ -45,7 +48,44 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new BadRequestException('Sai mật khẩu');
 
-    const token = this.jwt.sign({ sub: user.id });
-    return { token, user: { id: user.id, username: user.username, email: user.email } };
+    const accessToken = await this.signAccessToken(user.id);
+    const refreshToken = await this.signRefreshToken(user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: { id: user.id, username: user.username, email: user.email },
+    };
+  }
+
+  async signAccessToken(userId: string): Promise<string> {
+    return this.jwt.signAsync(
+      { sub: userId },
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+      },
+    );
+  }
+
+  async signRefreshToken(userId: string): Promise<string> {
+    return this.jwt.signAsync(
+      { sub: userId },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+      },
+    );
+  }
+
+  async refresh(refreshToken: string) {
+    const payload: { sub: string } = await this.jwt.verifyAsync(refreshToken, {
+      secret: process.env.JWT_REFRESH_SECRET,
+    });
+
+    const userId = payload.sub;
+
+    const newAccessToken = await this.signAccessToken(userId);
+    return { accessToken: newAccessToken };
   }
 }

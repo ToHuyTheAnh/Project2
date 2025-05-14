@@ -1,8 +1,4 @@
-import { CommentStatus } from '@prisma/client';
-import {
-  IsString,
-  IsNotEmpty,
-} from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -21,4 +17,3 @@ export class RegisterDto {
   @IsNotEmpty()
   email: string;
 }
-
