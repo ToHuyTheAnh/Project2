@@ -4,6 +4,7 @@ import { PrismaService } from '../db/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +37,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, res: Response) {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.identifier }, { username: dto.identifier }],
@@ -50,6 +51,14 @@ export class AuthService {
 
     const accessToken = await this.signAccessToken(user.id);
     const refreshToken = await this.signRefreshToken(user.id);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'strict',
+      secure: false,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
 
     return {
       accessToken,

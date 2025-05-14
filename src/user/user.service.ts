@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
-import { User, UserStatus } from '@prisma/client'; 
+import { User, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -60,7 +60,10 @@ export class UserService {
 
   async followUser(followerId: string, followingId: string) {
     if (followerId === followingId) {
-      throw new HttpException('Không thể theo dõi chính mình.', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Không thể theo dõi chính mình.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const existingFollow = await this.prismaService.userFollow.findFirst({
@@ -89,25 +92,25 @@ export class UserService {
   async getFollowing(userId: string) {
     const followings = await this.prismaService.userFollow.findMany({
       where: { followerId: userId },
-      select: { following: true }, 
+      select: { following: true },
     });
 
     // if (!followings || followings.length === 0) { // Kiểm tra mảng rỗng
     //   return { message: "Bạn chưa theo dõi ai!" };
     // }
-    return followings.map(f => f.following); 
+    return followings.map((f) => f.following);
   }
 
   async getFollowers(userId: string) {
     const followers = await this.prismaService.userFollow.findMany({
       where: { followingId: userId },
-      select: { follower: true }, 
+      select: { follower: true },
     });
 
     // if (!followers || followers.length === 0) { // Kiểm tra mảng rỗng
     //   return { message: "Chưa có ai theo dõi bạn!" };
     // }
-    return followers.map(f => f.follower); 
+    return followers.map((f) => f.follower);
   }
 
   // --- Thêm phương thức banUser ---
@@ -133,13 +136,13 @@ export class UserService {
 
     // Kiểm tra nếu user đã bị ban rồi thì không cần cập nhật nữa (tùy chọn)
     if (user.status === UserStatus.Banned) {
-        throw new HttpException(
+      throw new HttpException(
         {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: `User này đã bị ban trước đó.`,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `User này đã bị ban trước đó.`,
         },
         HttpStatus.BAD_REQUEST,
-        );
+      );
     }
 
     return this.prismaService.user.update({
