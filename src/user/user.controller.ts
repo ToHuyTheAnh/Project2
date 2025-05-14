@@ -8,9 +8,11 @@ import {
   Query,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('user')
 export class UserController {
@@ -45,6 +47,11 @@ export class UserController {
       message: 'Lấy toàn bộ users thành công',
       data: users,
     };
+  }
+
+  async getCurrentUser(@Req() req: AuthenticatedRequest) {
+
+
   }
 
   @Get(':id')

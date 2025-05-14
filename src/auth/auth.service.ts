@@ -1,9 +1,11 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../db/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +38,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.identifier }, { username: dto.identifier }],
@@ -50,6 +52,13 @@ export class AuthService {
 
     const accessToken = await this.signAccessToken(user.id);
     const refreshToken = await this.signRefreshToken(user.id);
+    
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
+    });
 
     return {
       accessToken,
@@ -87,5 +96,14 @@ export class AuthService {
 
     const newAccessToken = await this.signAccessToken(userId);
     return { accessToken: newAccessToken };
+  }
+
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    return { message: 'Đăng xuất thành công' };
   }
 }
