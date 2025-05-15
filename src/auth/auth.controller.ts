@@ -28,4 +28,10 @@ export class AuthController {
     }
     return await this.authService.refresh(refreshToken);
   }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(res);
+  }
+  
 }
