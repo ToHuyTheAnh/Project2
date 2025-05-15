@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Res } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../db/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -96,5 +96,14 @@ export class AuthService {
 
     const newAccessToken = await this.signAccessToken(userId);
     return { accessToken: newAccessToken };
+  }
+
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    return { message: 'Đăng xuất thành công' };
   }
 }
