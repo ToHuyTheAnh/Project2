@@ -5,12 +5,18 @@ import {
   Get,
   HttpStatus,
   Param,
-  Query,
   Patch,
   Post,
   UseGuards, // <<< Thêm UseGuards
   Req, // <<< Thêm Req
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+// import { UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { AuthGuard } from '@nestjs/passport'; // <<< Thêm AuthGuard
@@ -30,14 +36,27 @@ export class UserController {
     };
   }
 
-  @Patch('update/:id')
-  // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này
+  @Patch('update')
+  @UseGuards(AuthGuard('jwt')) // user moới có thể cập nhật thông tin của chính mình
+  @UseInterceptors(FileInterceptor('avatar'))
   async updateUser(
-    @Param('id') id: string,
+    @Req() req,
     @Body() userData: UpdateUserDto,
-    // @Req() req: AuthenticatedRequest, // Nếu cần kiểm tra user hiện tại có quyền update user này không
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
   ) {
-    // Thêm logic kiểm tra quyền, ví dụ: user chỉ được update chính mình hoặc admin mới được update người khác
+    const id = req.user.userId;
+    if (file) {
+      userData.avatar = `/uploads/user-images/${file.filename}`;
+    }
     const user = await this.userService.updateUser(id, userData);
     return {
       statusCode: HttpStatus.OK,
