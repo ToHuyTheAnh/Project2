@@ -172,6 +172,9 @@ export class PostService {
     return this.prismaService.post.findMany({
       where: { status: PostStatus.Published },
       orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, displayName: true, avatar: true } },
+      },
     });
   }
 

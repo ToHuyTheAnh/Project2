@@ -37,7 +37,7 @@ const ensureDirExists = (dirPath: string) => {
 
 const storage = diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(process.cwd(), 'public', 'uploads');
+    const uploadPath = path.join(process.cwd(), 'uploads');
     let subDir = 'others';
 
     if (file.mimetype.startsWith('image')) {

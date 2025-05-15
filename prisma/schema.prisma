@@ -58,16 +58,16 @@ enum PostStatus {
 }
 
 model Post {
-  id           String     @id @default(cuid())
+  id           String      @id @default(cuid())
   userId       String
-  user         User       @relation("UserPost", fields: [userId], references: [id])
-  trendTopicId String
-  trendTopic   TrendTopic @relation(fields: [trendTopicId], references: [id])
+  user         User        @relation("UserPost", fields: [userId], references: [id])
+  trendTopicId String?
+  trendTopic   TrendTopic? @relation(fields: [trendTopicId], references: [id])
   title        String
   content      String
   videoUrl     String?
   imageUrl     String?
-  status       PostStatus
+  status       PostStatus  @default(Published)
   comments     Comment[]
 
   sharedById UserSharePost[]

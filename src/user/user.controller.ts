@@ -9,7 +9,7 @@ import {
   Patch,
   Post,
   UseGuards, // <<< Thêm UseGuards
-  Req,      // <<< Thêm Req
+  Req, // <<< Thêm Req
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
@@ -90,11 +90,11 @@ export class UserController {
     return {
       statusCode: HttpStatus.OK,
       // message: 'Thao tác theo dõi/hủy theo dõi thành công', // Thông báo chung hơn
-      data: result, 
+      data: result,
     };
   }
 
-  @Get('following/:userId') 
+  @Get('following/:userId')
   // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ nếu cần
   async getFollowing(@Param('userId') userId: string) {
     const followings = await this.userService.getFollowing(userId);
@@ -105,7 +105,7 @@ export class UserController {
     };
   }
 
-  @Get('followers/:userId') 
+  @Get('followers/:userId')
   async getFollowers(@Param('userId') userId: string) {
     const followers = await this.userService.getFollowers(userId);
     return {
@@ -122,7 +122,7 @@ export class UserController {
    * @param id ID của người dùng cần ban.
    */
   @Patch(':id/ban')
-  @UseGuards(AuthGuard('jwt')) 
+  @UseGuards(AuthGuard('jwt'))
   // @Roles(UserRole.Admin) // Ví dụ nếu bạn có decorator @Roles và enum UserRole
   async banUser(@Param('id') id: string) {
     // const requestingUser = req.user; // Lấy thông tin admin thực hiện
