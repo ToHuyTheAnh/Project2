@@ -3,8 +3,8 @@
 //   Controller,
 //   Delete,
 //   Get,
-//   HttpStatus, 
-//   HttpException, 
+//   HttpStatus,
+//   HttpException,
 //   Param,
 //   Post,
 //   Query,
@@ -14,7 +14,7 @@
 // import { ReactionService } from './reaction.service';
 // import { CreateReactionDto } from './reaction.dto';
 // import { AuthGuard } from '@nestjs/passport';
-// import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface'; 
+// import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 // @Controller('reaction') // Đặt prefix route là 'reaction'
 // export class ReactionController {
