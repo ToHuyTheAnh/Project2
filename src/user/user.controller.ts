@@ -40,7 +40,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt')) // user moới có thể cập nhật thông tin của chính mình
   @UseInterceptors(FileInterceptor('avatar'))
   async updateUser(
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
     @Body() userData: UpdateUserDto,
     @UploadedFile(
       new ParseFilePipe({
@@ -77,9 +77,9 @@ export class UserController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard('jwt')) 
-  async getMe(@Req() req,) {
-    const userId = req.user.userId; 
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
     const data = await this.userService.getProfile(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -165,6 +165,4 @@ export class UserController {
       data: bannedUser,
     };
   }
-
-  
 }
