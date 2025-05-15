@@ -98,7 +98,7 @@ export class AuthService {
     return { accessToken: newAccessToken };
   }
 
-  async logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

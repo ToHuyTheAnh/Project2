@@ -5,11 +5,10 @@ import {
   Get,
   HttpStatus,
   Param,
-  Query,
   Patch,
   Post,
   UseGuards, // <<< Thêm UseGuards
-  Req,      // <<< Thêm Req
+  Req, // <<< Thêm Req
   UploadedFile,
   ParseFilePipe,
   FileTypeValidator,
@@ -46,7 +45,7 @@ export class UserController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), 
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
           new FileTypeValidator({ fileType: 'image/*' }),
         ],
         fileIsRequired: false,
@@ -57,7 +56,7 @@ export class UserController {
     const id = req.user.userId;
     if (file) {
       userData.avatar = `/uploads/user-images/${file.filename}`;
-    } 
+    }
     const user = await this.userService.updateUser(id, userData);
     return {
       statusCode: HttpStatus.OK,
@@ -110,11 +109,11 @@ export class UserController {
     return {
       statusCode: HttpStatus.OK,
       // message: 'Thao tác theo dõi/hủy theo dõi thành công', // Thông báo chung hơn
-      data: result, 
+      data: result,
     };
   }
 
-  @Get('following/:userId') 
+  @Get('following/:userId')
   // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ nếu cần
   async getFollowing(@Param('userId') userId: string) {
     const followings = await this.userService.getFollowing(userId);
@@ -125,7 +124,7 @@ export class UserController {
     };
   }
 
-  @Get('followers/:userId') 
+  @Get('followers/:userId')
   async getFollowers(@Param('userId') userId: string) {
     const followers = await this.userService.getFollowers(userId);
     return {
@@ -142,7 +141,7 @@ export class UserController {
    * @param id ID của người dùng cần ban.
    */
   @Patch(':id/ban')
-  @UseGuards(AuthGuard('jwt')) 
+  @UseGuards(AuthGuard('jwt'))
   // @Roles(UserRole.Admin) // Ví dụ nếu bạn có decorator @Roles và enum UserRole
   async banUser(@Param('id') id: string) {
     // const requestingUser = req.user; // Lấy thông tin admin thực hiện
