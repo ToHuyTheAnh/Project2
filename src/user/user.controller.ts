@@ -76,6 +76,18 @@ export class UserController {
     };
   }
 
+  @Get('me')
+  @UseGuards(AuthGuard('jwt')) 
+  async getMe(@Req() req,) {
+    const userId = req.user.userId; 
+    const data = await this.userService.getProfile(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy thông tin người dùng thành công',
+      data: data,
+    };
+  }
+
   @Get(':id')
   // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này
   async getUserById(@Param('id') id: string) {
@@ -154,15 +166,5 @@ export class UserController {
     };
   }
 
-  @Get('me')
-  @UseGuards(AuthGuard('jwt')) 
-  async getMe(@Req() req,) {
-    const userId = req.user.userId; 
-    const data = await this.userService.getProfile(userId);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Lấy thông tin người dùng thành công',
-      data: data,
-    };
-  }
+  
 }
