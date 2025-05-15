@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User, UserStatus } from '@prisma/client';
-import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class UserService {
@@ -153,7 +152,7 @@ export class UserService {
   }
   // --- Kết thúc phương thức banUser ---
 
-  // Lấy thông tin người dùng 
+  // Lấy thông tin người dùng
   async getProfile(id: string) {
     const user = await this.prismaService.user.findUnique({
       where: { id },
@@ -188,7 +187,6 @@ export class UserService {
       user,
       followers: followers.map((f) => f.follower),
       followings: followings.map((f) => f.following),
-    }
-
+    };
   }
 }
