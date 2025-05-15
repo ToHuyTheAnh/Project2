@@ -26,23 +26,23 @@ enum UserStatus {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  username      String       @unique
-  email         String       @unique
+  id            String          @id @default(cuid())
+  username      String          @unique
+  email         String          @unique
   password      String
   status        UserStatus
   role          UserRole
   displayName   String
   avatar        String?
-  emailVerified Boolean      @default(false)
-  posts         Post[]       @relation("UserPost")
+  emailVerified Boolean         @default(false)
+  posts         Post[]          @relation("UserPost")
   comments      Comment[]
-  chatBoxes     ChatBox[]    @relation("UserChatBox")
+  chatBoxes     ChatBox[]       @relation("UserChatBox")
   messages      Message[]
-  followings    UserFollow[] @relation("UserFollowing") // Người mình đang theo dõi
-  followers     UserFollow[] @relation("UserFollower") // Người đang theo dõi mình
-
-  sharedPosts UserSharePost[]
+  followings    UserFollow[]    @relation("UserFollowing") // Người mình đang theo dõi
+  followers     UserFollow[]    @relation("UserFollower") // Người đang theo dõi mình
+  sharedPosts   UserSharePost[]
+  notifications Notification[]  @relation("UserNotification")
 
   // timestamps
   createdAt DateTime   @default(now())
@@ -188,4 +188,13 @@ enum ReactionType {
   WOW
   SAD
   ANGRY
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserNotification", fields: [userId], references: [id])
+  actor     String
+  content   String
+  createdAt DateTime @default(now())
 }

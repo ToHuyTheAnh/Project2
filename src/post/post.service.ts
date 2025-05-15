@@ -292,6 +292,9 @@ export class PostService {
     const sharedPost = await this.prismaService.userSharePost.create({
       data: { postId, userId },
     });
+    // await this.prismaService.notification.create({
+
+    // })
     return {
       message: 'Chia sẻ bài viết thành công',
       data: sharedPost,
