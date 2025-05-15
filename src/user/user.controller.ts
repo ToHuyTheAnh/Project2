@@ -153,4 +153,16 @@ export class UserController {
       data: bannedUser,
     };
   }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt')) 
+  async getMe(@Req() req,) {
+    const userId = req.user.userId; 
+    const data = await this.userService.getProfile(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy thông tin người dùng thành công',
+      data: data,
+    };
+  }
 }

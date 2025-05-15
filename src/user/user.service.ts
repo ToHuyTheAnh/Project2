@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User, UserStatus } from '@prisma/client';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class UserService {
@@ -151,4 +152,43 @@ export class UserService {
     });
   }
   // --- Kết thúc phương thức banUser ---
+
+  // Lấy thông tin người dùng 
+  async getProfile(id: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id },
+      select: {
+        username: true,
+        email: true,
+        displayName: true,
+        avatar: true,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `User không tồn tại`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const followers = await this.prismaService.userFollow.findMany({
+      where: { followingId: id },
+      select: { follower: true },
+    });
+    const followings = await this.prismaService.userFollow.findMany({
+      where: { followerId: id },
+      select: { following: true },
+    });
+
+    return {
+      user,
+      followers: followers.map((f) => f.follower),
+      followings: followings.map((f) => f.following),
+    }
+
+  }
 }
