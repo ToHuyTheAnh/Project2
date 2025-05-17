@@ -189,4 +189,20 @@ export class UserService {
       followings: followings.map((f) => f.following),
     };
   }
+
+  async searchUser(userId: string, keyword: string): Promise<User[]> {
+    const formatKeyWord = keyword
+      .normalize('NFD') // Tách dấu tiếng Việt
+      .replace(/[\u0300-\u036f]/g, '') // Xoá dấu
+      .replace(/\s+/g, ' ') // Chuẩn hóa khoảng trắng
+      .trim(); // Xoá trắng đầu/cuối
+    if (!formatKeyWord) return [];
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: { not: userId },
+        displayName: { contains: formatKeyWord },
+      },
+    });
+    return users;
+  }
 }

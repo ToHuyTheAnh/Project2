@@ -64,7 +64,7 @@ model Post {
   trendTopicId String?
   trendTopic   TrendTopic? @relation(fields: [trendTopicId], references: [id])
   title        String
-  content      String
+  content      String      @db.Text
   videoUrl     String?
   imageUrl     String?
   status       PostStatus  @default(Published)

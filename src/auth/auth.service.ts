@@ -34,7 +34,12 @@ export class AuthService {
 
     return {
       message: 'Đăng ký thành công',
-      user: { id: user.id, username: user.username, email: user.email, avatar: user.avatar },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
     };
   }
 
@@ -64,7 +69,12 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, username: user.username, email: user.email, avatar: user.avatar },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
     };
   }
 
