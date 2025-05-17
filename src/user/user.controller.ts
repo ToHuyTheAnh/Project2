@@ -14,6 +14,7 @@ import {
   FileTypeValidator,
   MaxFileSizeValidator,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 // import { UseInterceptors } from '@nestjs/common';
@@ -85,6 +86,21 @@ export class UserController {
       statusCode: HttpStatus.OK,
       message: 'Lấy thông tin người dùng thành công',
       data: data,
+    };
+  }
+
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchUsers(
+    @Req() req: AuthenticatedRequest,
+    @Query('keyword') keyword: string,
+  ) {
+    const userId = req.user.userId;
+    const users = await this.userService.searchUser(userId, keyword);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Tìm kiếm users thành công',
+      data: users,
     };
   }
 
