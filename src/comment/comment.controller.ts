@@ -67,15 +67,7 @@ export class CommentController {
     };
   }
 
-  @Get(':id')
-  async getCommentById(@Param('id') id: string) {
-    const comment = await this.commentService.getCommentById(id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Lấy bình luận thành công',
-      data: comment,
-    };
-  }
+  
 
   @Get('post-comments')
   async getCommentsByPostId(@Query('postId') postId: string) {
@@ -84,6 +76,16 @@ export class CommentController {
       statusCode: HttpStatus.OK,
       message: 'Lấy toàn bộ bình luận của bài đăng thành công',
       data: comments,
+    };
+  }
+
+  @Get(':id')
+  async getCommentById(@Param('id') id: string) {
+    const comment = await this.commentService.getCommentById(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bình luận thành công',
+      data: comment,
     };
   }
 

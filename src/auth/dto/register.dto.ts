@@ -16,4 +16,6 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   email: string;
+
+  avatar?: string;
 }
