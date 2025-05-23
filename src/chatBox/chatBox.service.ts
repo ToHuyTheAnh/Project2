@@ -26,7 +26,7 @@ export class ChatBoxService {
           },
         },
       },
-      include: { users: true },
+      include: { users: true, messages: true },
     });
 
     if (chatBox) {
@@ -38,6 +38,7 @@ export class ChatBoxService {
           connect: participantIds.map((id) => ({ id })),
         },
       },
+      include: { users: true, messages: true },
     });
   }
 
@@ -53,7 +54,7 @@ export class ChatBoxService {
   async getChatBoxById(id: string): Promise<ChatBox> {
     const chatBox = await this.prismaService.chatBox.findUnique({
       where: { id },
-      include: { messages: true },
+      include: { users: true, messages: true },
     });
     if (!chatBox) {
       throw new HttpException(
