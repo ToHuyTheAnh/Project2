@@ -79,6 +79,17 @@ export class UserService {
       });
       return { message: 'Đã hủy theo dõi!' }; // Sửa chính tả
     }
+    const follower = await this.prismaService.user.findUnique({
+      where: { id: followerId },
+    });
+    const notificationData = {
+      userId: followingId,
+      actor: follower?.username || 'Người dùng',
+      content: 'đã theo dõi bạn',
+    };
+    await this.prismaService.notification.create({
+      data: notificationData,
+    });
 
     await this.prismaService.userFollow.create({
       data: {

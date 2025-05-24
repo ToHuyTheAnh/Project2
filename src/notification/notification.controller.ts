@@ -7,12 +7,16 @@ import {
   Param,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import {
   CreateNotificationDto,
   UpdateNotificationDto,
 } from './notification.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface';
 
 @Controller('notification')
 export class NotificationController {
@@ -45,9 +49,12 @@ export class NotificationController {
     };
   }
 
-  @Get()
-  async getNotifications() {
-    const notifications = await this.notificationService.getNotifications();
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/user')
+  async getNotifications(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const notifications =
+      await this.notificationService.getNotificationsByUserId(userId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy toàn bộ thông báo thành công',
@@ -56,7 +63,7 @@ export class NotificationController {
   }
 
   @Get('/:id')
-  async getNotificationById(@Param('id') id: string) {
+  async getNotificationByUserId(@Param('id') id: string) {
     const notification = await this.notificationService.getNotificationById(id);
     return {
       statusCode: HttpStatus.OK,
