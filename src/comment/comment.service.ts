@@ -12,7 +12,26 @@ export class CommentService {
     commentData: CreateCommentDto,
     userId: string,
   ): Promise<Comment> {
-    return this.prismaService.comment.create({
+    const post = await this.prismaService.post.findUnique({
+      where: { id: commentData.postId },
+      include: {
+        user: true,
+      },
+    });
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (post?.user?.id) {
+      const notificationData = {
+        userId: post.user.id,
+        actor: user?.username || 'Người dùng',
+        content: 'đã bình luận về bài đăng của bạn',
+      };
+      await this.prismaService.notification.create({
+        data: notificationData,
+      });
+    }
+    return await this.prismaService.comment.create({
       data: {
         ...commentData,
         userId,
@@ -25,7 +44,7 @@ export class CommentService {
     commentData: UpdateCommentDto,
     userId: string,
   ): Promise<Comment> {
-    return this.prismaService.comment.update({
+    return await this.prismaService.comment.update({
       where: { id },
       data: {
         ...commentData,
