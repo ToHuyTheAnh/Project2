@@ -8,15 +8,29 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { TrendTopicService } from './trendTopic.service';
 import { CreateTrendTopicDto, UpdateTrendTopicDto } from './trendTopic.dto';
+import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface'; // Giả sử bạn có interface này
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('trendTopic')
 export class TrendTopicController {
   constructor(private readonly trendTopicService: TrendTopicService) {}
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createTrendTopic(@Body() trendTopicData: CreateTrendTopicDto) {
+  async createTrendTopic(@Body() trendTopicData: CreateTrendTopicDto,
+                         @Req() req: AuthenticatedRequest) {
+    const role = req.user.role;
+    if (role !== 'ADMIN') {
+      return {
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'Bạn không có quyền tạo xu hướng',
+      };
+    }
     const trendTopic =
       await this.trendTopicService.createTrendTopic(trendTopicData);
     return {
