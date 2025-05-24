@@ -55,8 +55,8 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new BadRequestException('Sai mật khẩu');
 
-    const accessToken = await this.signAccessToken(user.id);
-    const refreshToken = await this.signRefreshToken(user.id);
+    const accessToken = await this.signAccessToken(user.id, user.role);
+    const refreshToken = await this.signRefreshToken(user.id, user.role);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -74,13 +74,14 @@ export class AuthService {
         username: user.username,
         email: user.email,
         avatar: user.avatar,
+        displayName: user.displayName,
       },
     };
   }
 
-  async signAccessToken(userId: string): Promise<string> {
+  async signAccessToken(userId: string, role: string): Promise<string> {
     return this.jwt.signAsync(
-      { sub: userId },
+      { sub: userId, role: role },
       {
         secret: process.env.JWT_ACCESS_SECRET,
         expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
@@ -88,9 +89,9 @@ export class AuthService {
     );
   }
 
-  async signRefreshToken(userId: string): Promise<string> {
+  async signRefreshToken(userId: string, role: string): Promise<string> {
     return this.jwt.signAsync(
-      { sub: userId },
+      { sub: userId, role: role },
       {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
@@ -99,13 +100,14 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const payload: { sub: string } = await this.jwt.verifyAsync(refreshToken, {
+    const payload: { sub: string, role: string } = await this.jwt.verifyAsync(refreshToken, {
       secret: process.env.JWT_REFRESH_SECRET,
     });
 
     const userId = payload.sub;
+    const role = payload.role;
 
-    const newAccessToken = await this.signAccessToken(userId);
+    const newAccessToken = await this.signAccessToken(userId, role);
     return { accessToken: newAccessToken };
   }
 
