@@ -36,6 +36,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   avatar: string | null;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
 }
 
 export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [

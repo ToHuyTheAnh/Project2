@@ -32,6 +32,7 @@ model User {
   password      String
   status        UserStatus
   role          UserRole
+  bio           String?
   displayName   String
   avatar        String?
   emailVerified Boolean         @default(false)

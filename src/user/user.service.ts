@@ -172,6 +172,7 @@ export class UserService {
         email: true,
         displayName: true,
         avatar: true,
+        bio: true,
       },
     });
 
