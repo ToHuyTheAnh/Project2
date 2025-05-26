@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Response } from 'express';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -79,9 +80,9 @@ export class AuthService {
     };
   }
 
-  async signAccessToken(userId: string, role: string): Promise<string> {
+  async signAccessToken(userId: string, role: UserRole): Promise<string> {
     return this.jwt.signAsync(
-      { sub: userId, role: role },
+      { sub: userId, role },
       {
         secret: process.env.JWT_ACCESS_SECRET,
         expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
@@ -89,9 +90,9 @@ export class AuthService {
     );
   }
 
-  async signRefreshToken(userId: string, role: string): Promise<string> {
+  async signRefreshToken(userId: string, role: UserRole): Promise<string> {
     return this.jwt.signAsync(
-      { sub: userId, role: role },
+      { userId, role },
       {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
@@ -100,12 +101,12 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const payload: { sub: string, role: string } = await this.jwt.verifyAsync(refreshToken, {
-      secret: process.env.JWT_REFRESH_SECRET,
-    });
+    const payload: { userId: string; role: UserRole } =
+      await this.jwt.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
 
-    const userId = payload.sub;
-    const role = payload.role;
+    const { userId, role } = payload;
 
     const newAccessToken = await this.signAccessToken(userId, role);
     return { accessToken: newAccessToken };

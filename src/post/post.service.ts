@@ -304,6 +304,9 @@ export class PostService {
     const sharedPost = await this.prismaService.userSharePost.create({
       data: { postId, userId },
     });
+    // await this.prismaService.notification.create({
+
+    // })
     return {
       message: 'Chia sẻ bài viết thành công',
       data: sharedPost,
@@ -399,5 +402,19 @@ export class PostService {
       where: { id: postId },
       data: { status: PostStatus.Banned },
     });
+  }
+
+  async getPostsByTrendTopic(trendTopicId: string): Promise<Post[]> {
+    const posts = await this.prismaService.post.findMany({
+      where: {
+        trendTopicId,
+        status: PostStatus.Published,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, displayName: true, avatar: true } },
+      },
+    });
+    return posts;
   }
 }

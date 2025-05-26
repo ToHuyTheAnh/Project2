@@ -193,7 +193,7 @@ export class PostController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Get('user-posts/:userId')
   async getPostsByUserId(@Param('userId') userId: string) {
     const posts = await this.postService.getPostsByUserId(userId);
@@ -282,6 +282,16 @@ export class PostController {
       statusCode: HttpStatus.OK,
       message: 'Ban bài đăng thành công',
       data: bannedPost,
+    };
+  }
+
+  @Post('trend-topic/:trendTopicId')
+  async getPostsByTrendTopic(@Param('trendTopicId') trendTopicId: string) {
+    const posts = await this.postService.getPostsByTrendTopic(trendTopicId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài đăng theo chủ đề xu hướng thành công',
+      data: posts,
     };
   }
 }

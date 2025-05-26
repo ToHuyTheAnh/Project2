@@ -10,6 +10,7 @@ import { TrendTopicModule } from './trendTopic/trendTopic.module';
 import { ChatGatewayModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     TrendTopicModule,
     ChatGatewayModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
