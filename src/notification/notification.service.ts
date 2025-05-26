@@ -34,7 +34,9 @@ export class NotificationService {
   }
 
   async getNotificationsByUserId(userId: string): Promise<Notification[]> {
-    return await this.prismaService.notification.findMany({ where: { userId } });
+    return await this.prismaService.notification.findMany({
+      where: { userId },
+    });
   }
 
   async getNotificationById(id: string): Promise<Notification> {
