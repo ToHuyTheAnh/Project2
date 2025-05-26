@@ -5,6 +5,8 @@ CREATE TABLE `User` (
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `bio` NVARCHAR(191) NOT NULL,
+    `hometown` NVARCHAR(191) NOT NULL,
+    `school` NVARCHAR(191) NOT NULL,
     `status` ENUM('Active', 'Banned', 'Deleted') NOT NULL,
     `role` ENUM('Admin', 'User') NOT NULL,
     `displayName` VARCHAR(191) NULL,

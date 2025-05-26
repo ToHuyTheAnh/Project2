@@ -40,6 +40,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @IsOptional()
+  @IsString()
+  hometown?: string;
+
+  @IsOptional()
+  @IsString()
+  school?: string;
 }
 
 export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [

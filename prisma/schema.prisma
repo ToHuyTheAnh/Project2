@@ -35,6 +35,8 @@ model User {
   bio           String?
   displayName   String
   avatar        String?
+  hometown      String?
+  school        String?
   emailVerified Boolean         @default(false)
   posts         Post[]          @relation("UserPost")
   comments      Comment[]

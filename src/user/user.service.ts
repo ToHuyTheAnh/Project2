@@ -173,6 +173,8 @@ export class UserService {
         displayName: true,
         avatar: true,
         bio: true,
+        hometown: true,
+        school: true,
       },
     });
 
