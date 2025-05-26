@@ -48,9 +48,10 @@ model User {
   notifications Notification[]  @relation("UserNotification")
 
   // timestamps
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Reaction  Reaction[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Reaction     Reaction[]
+  Notification Notification[] @relation("ActorUserRelation")
 }
 
 enum PostStatus {
@@ -197,6 +198,7 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation("UserNotification", fields: [userId], references: [id])
+  actorUser User     @relation("ActorUserRelation", fields: [actor], references: [username])
   actor     String
   content   String
   createdAt DateTime @default(now())
