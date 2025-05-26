@@ -66,9 +66,6 @@ export class CommentController {
       data: comments,
     };
   }
-
-  
-
   @Get('post-comments')
   async getCommentsByPostId(@Query('postId') postId: string) {
     const comments = await this.commentService.getCommentsByPostId(postId);
