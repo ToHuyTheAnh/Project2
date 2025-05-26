@@ -172,6 +172,9 @@ export class UserService {
         email: true,
         displayName: true,
         avatar: true,
+        bio: true,
+        hometown: true,
+        school: true,
       },
     });
 
@@ -199,5 +202,33 @@ export class UserService {
       followers: followers.map((f) => f.follower),
       followings: followings.map((f) => f.following),
     };
+  }
+
+  async searchUser(userId: string, keyword: string): Promise<User[]> {
+    const formatKeyWord = keyword
+      .normalize('NFD') // Tách dấu tiếng Việt
+      .replace(/[\u0300-\u036f]/g, '') // Xoá dấu
+      .replace(/\s+/g, ' ') // Chuẩn hóa khoảng trắng
+      .trim(); // Xoá trắng đầu/cuối
+    if (!formatKeyWord) return [];
+    const users = await this.prismaService.user.findMany({
+      where: {
+        id: { not: userId },
+        displayName: { contains: formatKeyWord },
+      },
+    });
+    return users;
+  }
+
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const follow = await this.prismaService.userFollow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+    return !!follow;
   }
 }

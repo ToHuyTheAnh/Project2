@@ -36,6 +36,25 @@ export class NotificationService {
   async getNotificationsByUserId(userId: string): Promise<Notification[]> {
     return await this.prismaService.notification.findMany({
       where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+        actorUser: {
+          select: {
+            id: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 

@@ -73,8 +73,15 @@ export class PostService {
     if (dataToSave.imageUrl === undefined) delete dataToSave.imageUrl;
     if (dataToSave.videoUrl === undefined) delete dataToSave.videoUrl;
 
-    // if (!dataToSave.trendTopicId) {
-    // }
+    if (postData.trendTopicId) {
+      const trend = await this.prismaService.trendTopic.findUnique({
+        where: { id: postData.trendTopicId },
+      });
+      if (!trend) {
+        throw new HttpException('Trendtopic not exist', HttpStatus.BAD_REQUEST);
+      }
+      dataToSave.trendTopicId = postData.trendTopicId;
+    }
 
     console.log('Data being saved to DB:', dataToSave);
 
@@ -172,6 +179,10 @@ export class PostService {
     return this.prismaService.post.findMany({
       where: { status: PostStatus.Published },
       orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, displayName: true, avatar: true } },
+        trendTopic: { select: { id: true, title: true } },
+      },
     });
   }
 
@@ -180,6 +191,7 @@ export class PostService {
       where: { id },
       include: {
         user: { select: { id: true, displayName: true, avatar: true } },
+        trendTopic: { select: { id: true, title: true } },
       },
     });
     // Cho phép xem bài bị ban/deleted nếu có link trực tiếp? Hoặc chỉ admin? Tùy logic

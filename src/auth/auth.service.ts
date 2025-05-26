@@ -29,12 +29,18 @@ export class AuthService {
         role: 'User',
         email: dto.email,
         password: hashed,
+        avatar: dto.avatar,
       },
     });
 
     return {
       message: 'Đăng ký thành công',
-      user: { id: user.id, username: user.username, email: user.email },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
     };
   }
 
@@ -64,7 +70,12 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, username: user.username, email: user.email },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
     };
   }
 

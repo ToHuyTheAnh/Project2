@@ -23,8 +23,8 @@ export class CreateCommentDto {
   @IsEnum(CommentStatus)
   status: CommentStatus;
 
-  @IsNumber()
-  likes: number;
+  // @IsNumber()
+  // likes: number;
 
   @IsOptional()
   @IsString()

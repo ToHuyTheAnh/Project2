@@ -14,6 +14,7 @@ import {
   FileTypeValidator,
   MaxFileSizeValidator,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 // import { UseInterceptors } from '@nestjs/common';
@@ -88,6 +89,21 @@ export class UserController {
     };
   }
 
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchUsers(
+    @Req() req: AuthenticatedRequest,
+    @Query('keyword') keyword: string,
+  ) {
+    const userId = req.user.userId;
+    const users = await this.userService.searchUser(userId, keyword);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Tìm kiếm users thành công',
+      data: users,
+    };
+  }
+
   @Get(':id')
   // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này
   async getUserById(@Param('id') id: string) {
@@ -143,6 +159,22 @@ export class UserController {
       statusCode: HttpStatus.OK,
       message: 'Lấy danh sách người theo dõi thành công',
       data: followers,
+    };
+  }
+
+  @Get('is-following/:followingId')
+  @UseGuards(AuthGuard('jwt'))
+  async isFollowing(
+    @Req() req: AuthenticatedRequest,
+    @Param('followingId') followingId: string,
+  ) {
+    const followerId = req.user.userId; // lấy user hiện tại từ JWT payload
+
+    const isFollowing = await this.userService.isFollowing(followerId, followingId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      data: { isFollowing },
     };
   }
 

@@ -37,7 +37,7 @@ const ensureDirExists = (dirPath: string) => {
 
 const storage = diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(process.cwd(), 'public', 'uploads');
+    const uploadPath = path.join(process.cwd(), 'uploads');
     let subDir = 'others';
 
     if (file.mimetype.startsWith('image')) {
@@ -193,7 +193,7 @@ export class PostController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Get('user-posts/:userId')
   async getPostsByUserId(@Param('userId') userId: string) {
     const posts = await this.postService.getPostsByUserId(userId);
