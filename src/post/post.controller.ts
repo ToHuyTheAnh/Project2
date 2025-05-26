@@ -284,4 +284,14 @@ export class PostController {
       data: bannedPost,
     };
   }
+
+  @Post('trend-topic/:trendTopicId')
+  async getPostsByTrendTopic(@Param('trendTopicId') trendTopicId: string) {
+    const posts = await this.postService.getPostsByTrendTopic(trendTopicId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài đăng theo chủ đề xu hướng thành công',
+      data: posts,
+    };
+  }
 }
