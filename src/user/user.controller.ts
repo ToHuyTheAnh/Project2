@@ -170,7 +170,10 @@ export class UserController {
   ) {
     const followerId = req.user.userId; // lấy user hiện tại từ JWT payload
 
-    const isFollowing = await this.userService.isFollowing(followerId, followingId);
+    const isFollowing = await this.userService.isFollowing(
+      followerId,
+      followingId,
+    );
 
     return {
       statusCode: HttpStatus.OK,
