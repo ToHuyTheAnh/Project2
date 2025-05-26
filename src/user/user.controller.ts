@@ -162,6 +162,22 @@ export class UserController {
     };
   }
 
+  @Get('is-following/:followingId')
+  @UseGuards(AuthGuard('jwt'))
+  async isFollowing(
+    @Req() req: AuthenticatedRequest,
+    @Param('followingId') followingId: string,
+  ) {
+    const followerId = req.user.userId; // lấy user hiện tại từ JWT payload
+
+    const isFollowing = await this.userService.isFollowing(followerId, followingId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      data: { isFollowing },
+    };
+  }
+
   // --- Thêm API endpoint banUser ---
   /**
    * API endpoint để ban một tài khoản người dùng.
