@@ -76,6 +76,17 @@ export class UserController {
       data: users,
     };
   }
+  @Get("friend")
+  @UseGuards(AuthGuard('jwt'))
+  async getFriends(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const friends = await this.userService.getUserFriend(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy danh sách bạn bè thành công',
+      data: friends,
+    };
+  }
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
@@ -200,4 +211,6 @@ export class UserController {
       data: bannedUser,
     };
   }
+
+  
 }
