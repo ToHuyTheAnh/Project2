@@ -285,7 +285,7 @@ export class PostController {
     };
   }
 
-  @Post('trend-topic/:trendTopicId')
+  @Get('trend-topic/:trendTopicId')
   async getPostsByTrendTopic(@Param('trendTopicId') trendTopicId: string) {
     const posts = await this.postService.getPostsByTrendTopic(trendTopicId);
     return {
