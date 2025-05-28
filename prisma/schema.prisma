@@ -37,6 +37,10 @@ model User {
   avatar        String?
   hometown      String?
   school        String?
+  birthday      DateTime?       // Ngày sinh
+  gender        String?         // Giới tính
+  relationship  String?         // Tình trạng quan hệ
+  address       String?         // Địa chỉ
   emailVerified Boolean         @default(false)
   posts         Post[]          @relation("UserPost")
   comments      Comment[]

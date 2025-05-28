@@ -186,6 +186,28 @@ export class PostService {
     });
   }
 
+  async getPostsForUser(userId: string) {
+    const posts = await this.prismaService.post.findMany({
+      where: { status: PostStatus.Published },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        user: { select: { id: true, displayName: true, avatar: true } },
+        trendTopic: { select: { id: true, title: true } },
+        Reaction: true,
+      },
+    });
+    const postsWithUser = posts.map((post) => {
+      const isReacted = post.Reaction.some(
+        (reaction) => reaction.userId === userId,
+      );
+      return {
+        ...post,
+        isReacted,
+      };
+    });
+    return postsWithUser;
+  }
+
   async getPostById(id: string): Promise<Post | null> {
     const post = await this.prismaService.post.findUnique({
       where: { id },

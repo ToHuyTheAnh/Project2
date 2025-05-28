@@ -11,6 +11,7 @@ import { ChatGatewayModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationModule } from './notification/notification.module';
+import { ReactionModule } from './reaction/reaction.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { NotificationModule } from './notification/notification.module';
     ChatGatewayModule,
     AuthModule,
     NotificationModule,
+    ReactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

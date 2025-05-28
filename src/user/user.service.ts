@@ -233,12 +233,12 @@ export class UserService {
   }
 
   async getUserFriend(userId: string) {
-    const followings = await this.prismaService.userFollow.findMany({   
+    const followings = await this.prismaService.userFollow.findMany({
       where: { followerId: userId },
       select: { following: true },
     });
     if (!followings || followings.length === 0) {
-      return []; 
+      return [];
     }
     const followingIds = followings.map((f) => f.following.id);
 
@@ -246,7 +246,7 @@ export class UserService {
       followingIds.map(async (followingId) => {
         const isFriend = await this.isFollowing(followingId, userId);
         return isFriend ? followingId : null;
-      })
+      }),
     );
 
     const friendIds = friendChecks.filter((id) => id !== null);
