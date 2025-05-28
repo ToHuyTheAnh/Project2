@@ -45,6 +45,18 @@ export class ChatBoxController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/user/:id')
+  async getChatBoxesByUserId(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const chatBoxs = await this.chatBoxService.getChatBoxesByUserId(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Hiển thị toàn bộ chatbox của user thành công',
+      data: chatBoxs,
+    };
+  }
+
   @Get(':id')
   async getChatBoxById(@Param('id') id: string) {
     const chatBox = await this.chatBoxService.getChatBoxById(id);

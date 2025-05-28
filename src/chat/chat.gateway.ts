@@ -49,7 +49,7 @@ export class ChatGateway
       const createMessageDto: CreateMessageDto = {
         chatBoxId,
         content: message,
-        status: 'Published',
+        status: 'Unseen',
       };
 
       const newMessage = await this.messageService.createMessage(

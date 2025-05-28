@@ -117,8 +117,8 @@ model ChatBox {
 }
 
 enum MessageStatus {
-  Published
-  Deleted
+  Seen
+  Unseen
 }
 
 model Message {
@@ -198,11 +198,17 @@ enum ReactionType {
   ANGRY
 }
 
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation("UserNotification", fields: [userId], references: [id])
   actorUser User     @relation("ActorUserRelation", fields: [actor], references: [username])
+  status    NotificationStatus @default(UNREAD)
   actor     String
   content   String
   createdAt DateTime @default(now())
