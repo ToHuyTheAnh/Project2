@@ -183,6 +183,18 @@ export class PostController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('for-user')
+  async getPostsForUser(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+    const posts = await this.postService.getPostsForUser(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy bài đăng cho người dùng thành công',
+      data: posts,
+    };
+  }
+
   @Get(':id')
   async getPostById(@Param('id') id: string) {
     const post = await this.postService.getPostById(id);
