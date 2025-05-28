@@ -190,7 +190,7 @@ export class PostService {
     const posts = await this.prismaService.post.findMany({
       where: { status: PostStatus.Published },
       orderBy: { createdAt: 'desc' },
-      select: {
+      include: {
         user: { select: { id: true, displayName: true, avatar: true } },
         trendTopic: { select: { id: true, title: true } },
         Reaction: true,
