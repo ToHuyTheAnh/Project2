@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateTrendTopicDto, UpdateTrendTopicDto } from './trendTopic.dto';
 import { TrendTopic } from '@prisma/client';
+import path from 'path';
 
 @Injectable()
 export class TrendTopicService {
@@ -10,8 +11,29 @@ export class TrendTopicService {
 
   async createTrendTopic(
     trendTopicData: CreateTrendTopicDto,
+    file?: Express.Multer.File,
   ): Promise<TrendTopic> {
     try {
+      const dataToSave: any = {
+        ...trendTopicData,
+        imageUrl: trendTopicData.imageUrl || null,
+      };
+      if (file) {
+        const relativePath = file.path
+          .substring(file.path.indexOf(path.join('uploads')))
+          .replace(/\\/g, '/');
+        const finalUrl = `/${relativePath}`;
+
+        if (file.mimetype.startsWith('image')) {
+          dataToSave.imageUrl = finalUrl;
+          dataToSave.videoUrl = null;
+          console.log(`Saving image URL: ${finalUrl}`);
+        } else if (file.mimetype.startsWith('video')) {
+          dataToSave.videoUrl = finalUrl;
+          dataToSave.imageUrl = null;
+          console.log(`Saving video URL: ${finalUrl}`);
+        }
+      }
       return await this.prismaService.trendTopic.create({
         data: { ...trendTopicData },
       });

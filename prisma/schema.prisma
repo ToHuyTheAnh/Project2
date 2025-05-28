@@ -37,10 +37,10 @@ model User {
   avatar        String?
   hometown      String?
   school        String?
-  birthday      DateTime?       // Ngày sinh
-  gender        String?         // Giới tính
-  relationship  String?         // Tình trạng quan hệ
-  address       String?         // Địa chỉ
+  birthday      DateTime? // Ngày sinh
+  gender        String? // Giới tính
+  relationship  String? // Tình trạng quan hệ
+  address       String? // Địa chỉ
   emailVerified Boolean         @default(false)
   posts         Post[]          @relation("UserPost")
   comments      Comment[]
@@ -150,11 +150,12 @@ model UserFollow {
 }
 
 model TrendTopic {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   posts       Post[]
   title       String
   description String
   note        String
+  imageUrl    String?
 
   // timestamps
   createdAt DateTime @default(now())
@@ -204,12 +205,12 @@ enum NotificationStatus {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String             @id @default(cuid())
   userId    String
-  user      User     @relation("UserNotification", fields: [userId], references: [id])
-  actorUser User     @relation("ActorUserRelation", fields: [actor], references: [username])
+  user      User               @relation("UserNotification", fields: [userId], references: [id])
+  actorUser User               @relation("ActorUserRelation", fields: [actor], references: [username])
   status    NotificationStatus @default(UNREAD)
   actor     String
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime           @default(now())
 }

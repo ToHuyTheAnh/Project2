@@ -12,6 +12,10 @@ export class CreateTrendTopicDto {
   @IsString()
   @IsOptional()
   note: string;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }
 
 export class UpdateTrendTopicDto extends CreateTrendTopicDto {}
