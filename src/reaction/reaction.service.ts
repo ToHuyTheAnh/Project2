@@ -54,9 +54,7 @@ export class ReactionService {
   async getReactionsByPostId(postId: string) {
     return this.prismaService.reaction.findMany({
       where: { postId },
-      select: {
-        postId: true,
-        type: true,
+      include: {
         user: {
           select: {
             id: true,
