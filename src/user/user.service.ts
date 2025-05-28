@@ -255,7 +255,6 @@ export class UserService {
         return isFriend ? followingId : null;
       }),
     );
-
     const friendIds = friendChecks.filter((id) => id !== null);
 
     return this.prismaService.user.findMany({
