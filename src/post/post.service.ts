@@ -214,6 +214,7 @@ export class PostService {
       include: {
         user: { select: { id: true, displayName: true, avatar: true } },
         trendTopic: { select: { id: true, title: true } },
+        Reaction: true,
       },
     });
     // Cho phép xem bài bị ban/deleted nếu có link trực tiếp? Hoặc chỉ admin? Tùy logic
