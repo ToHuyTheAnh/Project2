@@ -2,19 +2,57 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  HttpException,
   HttpStatus,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { TrendTopicService } from './trendTopic.service';
 import { CreateTrendTopicDto, UpdateTrendTopicDto } from './trendTopic.dto';
 import { AuthenticatedRequest } from 'src/common/interface/authenticated-request.interface'; // Giả sử bạn có interface này
 import { AuthGuard } from '@nestjs/passport';
+import * as fs from 'fs';
+import * as path from 'path';
+import { diskStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
+
+const ensureDirExists = (dirPath: string) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+const storage = diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads');
+    let subDir = 'others';
+
+    if (file.mimetype.startsWith('image')) {
+      subDir = 'post-images';
+    } else if (file.mimetype.startsWith('video')) {
+      subDir = 'post-videos';
+    }
+
+    const finalPath = path.join(uploadPath, subDir);
+    ensureDirExists(finalPath);
+    cb(null, finalPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+  },
+});
 
 @Controller('trendTopic')
 export class TrendTopicController {
@@ -22,9 +60,43 @@ export class TrendTopicController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: storage,
+      fileFilter: (req, file, cb) => {
+        if (
+          file.mimetype.startsWith('image') ||
+          file.mimetype.startsWith('video')
+        ) {
+          cb(null, true);
+        } else {
+          cb(
+            new HttpException(
+              'Chỉ chấp nhận file ảnh hoặc video!',
+              HttpStatus.BAD_REQUEST,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
   async createTrendTopic(
     @Body() trendTopicData: CreateTrendTopicDto,
     @Req() req: AuthenticatedRequest,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
+          new FileTypeValidator({
+            fileType:
+              /^(image\/(jpeg|png|gif|webp)|video\/(mp4|quicktime|webm|ogg))$/,
+          }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
   ) {
     const role = req.user.role;
     if (role !== 'ADMIN') {
@@ -33,8 +105,10 @@ export class TrendTopicController {
         message: 'Bạn không có quyền tạo xu hướng',
       };
     }
-    const trendTopic =
-      await this.trendTopicService.createTrendTopic(trendTopicData);
+    const trendTopic = await this.trendTopicService.createTrendTopic(
+      trendTopicData,
+      file,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo xu hướng thành công',
