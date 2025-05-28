@@ -17,6 +17,7 @@ export class NotificationService {
     return this.prismaService.notification.create({
       data: {
         ...notificationData,
+        status: 'UNREAD',
       },
     });
   }

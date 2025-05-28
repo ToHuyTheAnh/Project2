@@ -22,8 +22,10 @@ export class TrendTopicController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/create')
-  async createTrendTopic(@Body() trendTopicData: CreateTrendTopicDto,
-                         @Req() req: AuthenticatedRequest) {
+  async createTrendTopic(
+    @Body() trendTopicData: CreateTrendTopicDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     const role = req.user.role;
     if (role !== 'ADMIN') {
       return {

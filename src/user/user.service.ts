@@ -72,16 +72,25 @@ export class UserService {
         followingId,
       },
     });
+    const follower = await this.prismaService.user.findUnique({
+      where: { id: followerId },
+    });
 
     if (existingFollow) {
       await this.prismaService.userFollow.delete({
         where: { id: existingFollow.id },
       });
+      const notificationData = {
+        userId: followingId,
+        actor: follower?.username || 'Người dùng',
+        content: 'đã hủy theo dõi bạn',
+      };
+      await this.prismaService.notification.create({
+        data: notificationData,
+      });
       return { message: 'Đã hủy theo dõi!' }; // Sửa chính tả
     }
-    const follower = await this.prismaService.user.findUnique({
-      where: { id: followerId },
-    });
+
     const notificationData = {
       userId: followingId,
       actor: follower?.username || 'Người dùng',

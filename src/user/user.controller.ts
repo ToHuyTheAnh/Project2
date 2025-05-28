@@ -76,7 +76,7 @@ export class UserController {
       data: users,
     };
   }
-  @Get("friend")
+  @Get('friend')
   @UseGuards(AuthGuard('jwt'))
   async getFriends(@Req() req: AuthenticatedRequest) {
     const userId = req.user.userId;
@@ -211,6 +211,4 @@ export class UserController {
       data: bannedUser,
     };
   }
-
-  
 }
