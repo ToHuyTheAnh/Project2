@@ -14,6 +14,9 @@ export class UserService {
   }
 
   async updateUser(id: string, userData: UpdateUserDto): Promise<User> {
+    if (userData.birthday) {
+      userData.birthday = new Date(userData.birthday).toISOString();
+    }
     return this.prismaService.user.update({
       where: { id },
       data: userData,
@@ -175,6 +178,10 @@ export class UserService {
         bio: true,
         hometown: true,
         school: true,
+        birthday: true,
+        gender: true,
+        relationship: true,
+        address: true,
       },
     });
 

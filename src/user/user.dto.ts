@@ -7,6 +7,7 @@ import {
   IsOptional,
   MinLength,
   IsEnum,
+  IsDateString,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -48,6 +49,22 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   school?: string;
+
+  @IsOptional()
+  @IsDateString()
+  birthday?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  relationship?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 }
 
 export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [
