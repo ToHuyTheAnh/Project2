@@ -62,6 +62,17 @@ export class NotificationController {
     };
   }
 
+  // @UseGuards(AuthGuard('jwt'))
+  @Patch('/read')
+  async markNotificationsAsRead(@Body('ids') ids: string[]) {
+    // const userId = req.user.userId;
+    await this.notificationService.markNotificationAsRead(ids);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Đánh dấu tất cả thông báo là đã đọc',
+    };
+  }
+
   @Get('/:id')
   async getNotificationByUserId(@Param('id') id: string) {
     const notification = await this.notificationService.getNotificationById(id);
