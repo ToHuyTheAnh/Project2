@@ -99,7 +99,7 @@ export class TrendTopicController {
     file?: Express.Multer.File,
   ) {
     const role = req.user.role;
-    if (role !== 'ADMIN') {
+    if (role !== 'Admin') {
       return {
         statusCode: HttpStatus.FORBIDDEN,
         message: 'Bạn không có quyền tạo xu hướng',

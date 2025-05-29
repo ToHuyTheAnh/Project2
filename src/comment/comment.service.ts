@@ -21,7 +21,7 @@ export class CommentService {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
     });
-    if (post?.user?.id) {
+    if (post?.user?.id && post.user.id !== userId) {
       const notificationData = {
         userId: post.user.id,
         actor: user?.username || 'Người dùng',
@@ -88,6 +88,15 @@ export class CommentService {
     }
     const comments = await this.prismaService.comment.findMany({
       where: { postId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+      },
     });
     return comments;
   }
