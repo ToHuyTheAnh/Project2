@@ -92,4 +92,23 @@ export class NotificationService {
       where: { id },
     });
   }
+
+  async markNotificationAsRead(ids: string[]) {
+    const notification = await this.prismaService.notification.findMany({
+      where: { id : { in: ids } },
+    });
+    if (!notification) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Thông báo không tồn tại`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return this.prismaService.notification.updateMany({
+      where: { id: { in : ids } }, 
+      data: { status: 'READ' },
+    });
+  }
 }
