@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Req,
+  Param,
 } from '@nestjs/common';
 import { ReactionService } from './reaction.service';
 import { CreateReactionDto } from './reaction.dto';
@@ -78,6 +79,30 @@ export class ReactionController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy danh sách cảm xúc của bài đăng thành công',
+      data: reactions,
+    };
+  }
+
+  @Get(':postId/me')
+  @UseGuards(AuthGuard('jwt'))
+  async getUserReactionsByPostId(
+    @Req() req: AuthenticatedRequest,
+    @Param('postId') postId: string,
+  ) { 
+    const userId = req.user.userId;
+    if (!postId) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `Thiếu tham số postId`,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const reactions = await this.reactionService.getReactionsByUserId(userId, postId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy danh sách cảm xúc của người dùng theo bài đăng thành công',
       data: reactions,
     };
   }

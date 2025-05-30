@@ -65,4 +65,16 @@ export class ReactionService {
       },
     });
   }
+
+  async getReactionsByUserId(userId: string, postId: string) {
+    return this.prismaService.reaction.findUnique({
+      where: { userId_postId: {
+          userId,
+          postId,
+        }, },
+      select : {
+        type: true,
+      }
+    });
+  }
 }
