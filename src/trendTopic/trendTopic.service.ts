@@ -35,7 +35,7 @@ export class TrendTopicService {
         }
       }
       return await this.prismaService.trendTopic.create({
-        data: { ...trendTopicData },
+        data: dataToSave,
       });
     } catch (error) {
       console.error('Error creating TrendTopic:', error);
