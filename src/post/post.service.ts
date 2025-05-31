@@ -83,7 +83,11 @@ export class PostService {
       dataToSave.trendTopicId = postData.trendTopicId;
     }
 
-    console.log('Data being saved to DB:', dataToSave);
+    // console.log('Data being saved to DB:', dataToSave);
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { point: { increment: 5 } }, 
+    });
 
     return this.prismaService.post.create({
       data: dataToSave,

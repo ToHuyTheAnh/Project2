@@ -50,12 +50,14 @@ model User {
   followers     UserFollow[]    @relation("UserFollower") // Người đang theo dõi mình
   sharedPosts   UserSharePost[]
   notifications Notification[]  @relation("UserNotification")
+  point         Int             @default(0)
 
   // timestamps
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   Reaction     Reaction[]
   Notification Notification[] @relation("ActorUserRelation")
+  UserItem     UserItem[]       @relation("UserItem")
 }
 
 enum PostStatus {
@@ -213,4 +215,32 @@ model Notification {
   actor     String
   content   String
   createdAt DateTime           @default(now())
+}
+
+
+enum ItemType {
+  FRAME
+  IMAGE
+}
+
+model ShopItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Int
+  type        ItemType
+  imageUrl    String
+  discount    Int?     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  UserItem    UserItem[] @relation("Item")
+}
+
+model UserItem {
+  id          String   @id @default(cuid())
+  userId      String 
+  user        User     @relation("UserItem", fields: [userId], references: [id])
+  itemId      String
+  item        ShopItem @relation("Item", fields: [itemId], references: [id])
 }

@@ -76,6 +76,18 @@ export class UserController {
       data: users,
     };
   }
+
+  @Get("/ranking")
+  async getAllUserTrendingPoint() {
+    const users = await this.userService.getAllUserTrendingPoints();
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy danh sách người dùng theo điểm thành công',
+      data: users,
+    };
+  }
+
+
   @Get('friend')
   @UseGuards(AuthGuard('jwt'))
   async getFriends(@Req() req: AuthenticatedRequest) {

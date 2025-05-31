@@ -272,4 +272,19 @@ export class UserService {
       },
     });
   }
+
+  async getAllUserTrendingPoints() {
+    const users = await this.prismaService.user.findMany({
+      where: {
+        point: {
+          gt: 0,
+        },
+      },
+      orderBy: {
+        point: 'desc', 
+      },
+      take: 3, 
+    });
+    return users;
+  }
 }
