@@ -76,6 +76,9 @@ export class AuthService {
         email: user.email,
         avatar: user.avatar,
         displayName: user.displayName,
+        role: user.role,
+        frameUrl: user.frameUrl,
+        bgrUrl: user.bgrUrl,
       },
     };
   }

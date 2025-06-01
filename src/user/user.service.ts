@@ -203,6 +203,8 @@ export class UserService {
         gender: true,
         relationship: true,
         address: true,
+        frameUrl: true,
+        bgrUrl: true,
       },
     });
 
