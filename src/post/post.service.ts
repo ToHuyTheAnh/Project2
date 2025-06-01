@@ -247,6 +247,8 @@ export class PostService {
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { id: true, displayName: true, avatar: true } },
+        trendTopic: { select: { id: true, title: true } },
+        Reaction: true,
       },
     });
   }
