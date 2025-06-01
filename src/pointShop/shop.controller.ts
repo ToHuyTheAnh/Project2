@@ -36,7 +36,6 @@ export class ShopController {
     };
   }
 
-
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async createItem(
@@ -44,18 +43,18 @@ export class ShopController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-          new FileTypeValidator({ fileType: 'image/*' }),
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50MB
+          new FileTypeValidator({
+            fileType:
+              /^(image\/(jpeg|png|gif|webp)|video\/(mp4|quicktime|webm|ogg))$/,
+          }),
         ],
         fileIsRequired: false,
       }),
     )
     file?: Express.Multer.File,
   ) {
-    // if (file) {
-    //   shopItemData.imageUrl = `/uploads/items/${file.filename}`;
-    // }
-    const item = await this.shopService.createShopItem(shopItemData);
+    const item = await this.shopService.createShopItem(shopItemData, file);
 
     return {
       statusCode: HttpStatus.OK,
@@ -72,7 +71,11 @@ export class ShopController {
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.userId;
-    const shopItem = await this.shopService.updateShopItem(id, shopItemData, userId);
+    const shopItem = await this.shopService.updateShopItem(
+      id,
+      shopItemData,
+      userId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Cập nhật shop item thành công',
@@ -80,7 +83,7 @@ export class ShopController {
     };
   }
 
-  @Post("buy-item/:itemId")
+  @Post('buy-item/:itemId')
   @UseGuards(AuthGuard('jwt'))
   async userBuyItem(
     @Param('itemId') id: string,
@@ -95,7 +98,7 @@ export class ShopController {
     };
   }
 
-  @Get("user-items")
+  @Get('user-items')
   @UseGuards(AuthGuard('jwt'))
   async getUserItems(@Req() req: AuthenticatedRequest) {
     const userId = req.user.userId;

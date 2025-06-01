@@ -1,5 +1,10 @@
 import { OmitType, PartialType } from '@nestjs/mapped-types';
-import { UserRole, UserStatus, UserGender, UserRelationship } from '@prisma/client';
+import {
+  UserRole,
+  UserStatus,
+  UserGender,
+  UserRelationship,
+} from '@prisma/client';
 import {
   IsString,
   IsEmail,

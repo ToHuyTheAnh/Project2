@@ -1,13 +1,23 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
-import { ShopItem, UserItem } from '@prisma/client';
 import { CreateShopItemDto, UpdateShopItemDto } from './shop.dto';
+import * as path from 'path';
 
 @Injectable()
 export class ShopService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createShopItem(shopItemData: CreateShopItemDto) {
+  async createShopItem(shopItemData: CreateShopItemDto, file) {
+    if (file) {
+      const relativePath = file.path
+        .substring(file.path.indexOf(path.join('uploads')))
+        .replace(/\\/g, '/');
+      const finalUrl = `/${relativePath}`;
+
+      if (file.mimetype.startsWith('image')) {
+        shopItemData.imageUrl = finalUrl;
+      }
+    }
     return this.prismaService.shopItem.create({
       data: {
         name: shopItemData.name,

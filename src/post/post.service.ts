@@ -86,7 +86,7 @@ export class PostService {
     // console.log('Data being saved to DB:', dataToSave);
     await this.prismaService.user.update({
       where: { id: userId },
-      data: { point: { increment: 5 } }, 
+      data: { point: { increment: 5 } },
     });
 
     return this.prismaService.post.create({
