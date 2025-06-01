@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationModule } from './notification/notification.module';
 import { ReactionModule } from './reaction/reaction.module';
+import { ShopModule } from './pointShop/shop.module'; 
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReactionModule } from './reaction/reaction.module';
     AuthModule,
     NotificationModule,
     ReactionModule,
+    ShopModule, 
   ],
   controllers: [AppController],
   providers: [AppService],
