@@ -1,5 +1,5 @@
 import { OmitType, PartialType } from '@nestjs/mapped-types';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus, UserGender, UserRelationship } from '@prisma/client';
 import {
   IsString,
   IsEmail,
@@ -54,13 +54,11 @@ export class CreateUserDto {
   @IsDateString()
   birthday?: string;
 
-  @IsOptional()
-  @IsString()
-  gender?: string;
+  @IsEnum(UserGender)
+  gender: UserGender;
 
-  @IsOptional()
-  @IsString()
-  relationship?: string;
+  @IsEnum(UserRelationship)
+  relationship: UserRelationship;
 
   @IsOptional()
   @IsString()

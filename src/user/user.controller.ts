@@ -129,7 +129,7 @@ export class UserController {
   @Get(':id')
   // @UseGuards(AuthGuard('jwt')) // Cân nhắc bảo vệ route này
   async getUserById(@Param('id') id: string) {
-    const user = await this.userService.getUserById(id);
+    const user = await this.userService.getProfile(id);
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy user thành công',
