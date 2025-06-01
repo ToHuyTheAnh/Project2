@@ -161,8 +161,8 @@ export class TrendTopicController {
     };
   }
 
-  @Get('search')
-  async searchTrendTopicByKeyword(@Query('keyword') keyword: string) {
+  @Get('search/:keyword')
+  async searchTrendTopicByKeyword(@Param('keyword') keyword: string) {
     const trendTopics =
       await this.trendTopicService.searchTrendTopicByKeyword(keyword);
     return {
