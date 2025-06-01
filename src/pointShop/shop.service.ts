@@ -13,7 +13,7 @@ export class ShopService {
       data: {
         name: shopItemData.name,
         description: shopItemData.description,
-        price: shopItemData.price,
+        price: parseInt(shopItemData.price.toString()),
         type: shopItemData.type,
         imageUrl: shopItemData.imageUrl || '',
         discount: shopItemData.discount || 0, 

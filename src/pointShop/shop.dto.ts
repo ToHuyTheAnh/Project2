@@ -3,7 +3,8 @@ import { Type } from 'class-transformer';
 
 export enum ItemType {
   FRAME = 'FRAME',
-  IMAGE = 'IMAGE'
+  IMAGE = 'IMAGE',
+  BGR = 'BGR',
 }
 
 export class CreateShopItemDto {

@@ -38,6 +38,7 @@ export class ShopController {
 
 
   @Post()
+  @UseInterceptors(FileInterceptor('image'))
   async createItem(
     @Body() shopItemData: CreateShopItemDto,
     @UploadedFile(
@@ -51,9 +52,9 @@ export class ShopController {
     )
     file?: Express.Multer.File,
   ) {
-    if (file) {
-      shopItemData.imageUrl = `/uploads/user-images/${file.filename}`;
-    }
+    // if (file) {
+    //   shopItemData.imageUrl = `/uploads/items/${file.filename}`;
+    // }
     const item = await this.shopService.createShopItem(shopItemData);
 
     return {

@@ -25,6 +25,19 @@ enum UserStatus {
   Deleted
 }
 
+enum UserGender {
+  Male
+  Female
+  Other
+}
+
+enum UserRelationship {
+  Single
+  InRelationship
+  Married
+  Other
+}
+
 model User {
   id            String          @id @default(cuid())
   username      String          @unique
@@ -38,9 +51,12 @@ model User {
   hometown      String?
   school        String?
   birthday      DateTime? // Ngày sinh
-  gender        String? // Giới tính
-  relationship  String? // Tình trạng quan hệ
+  gender       UserGender       @default(Male)
+  relationship UserRelationship @default(Single)
   address       String? // Địa chỉ
+  frameUrl      String?
+  bgrUrl        String?
+
   emailVerified Boolean         @default(false)
   posts         Post[]          @relation("UserPost")
   comments      Comment[]
@@ -221,6 +237,7 @@ model Notification {
 enum ItemType {
   FRAME
   IMAGE
+  BGR
 }
 
 model ShopItem {
@@ -229,7 +246,7 @@ model ShopItem {
   description String
   price       Int
   type        ItemType
-  imageUrl    String
+  imageUrl    String   
   discount    Int?     @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
