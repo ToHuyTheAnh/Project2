@@ -34,18 +34,9 @@ const ensureDirExists = (dirPath: string) => {
 
 const storage = diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(process.cwd(), 'uploads');
-    let subDir = 'others';
-
-    if (file.mimetype.startsWith('image')) {
-      subDir = 'post-images';
-    } else if (file.mimetype.startsWith('video')) {
-      subDir = 'post-videos';
-    }
-
-    const finalPath = path.join(uploadPath, subDir);
-    ensureDirExists(finalPath);
-    cb(null, finalPath);
+    const uploadPath = path.join(process.cwd(), 'uploads', 'trendTopic-images');
+    ensureDirExists(uploadPath);
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -64,17 +55,11 @@ export class TrendTopicController {
     FileInterceptor('file', {
       storage: storage,
       fileFilter: (req, file, cb) => {
-        if (
-          file.mimetype.startsWith('image') ||
-          file.mimetype.startsWith('video')
-        ) {
+        if (file.mimetype.startsWith('image')) {
           cb(null, true);
         } else {
           cb(
-            new HttpException(
-              'Chỉ chấp nhận file ảnh hoặc video!',
-              HttpStatus.BAD_REQUEST,
-            ),
+            new HttpException('Chỉ chấp nhận file ảnh', HttpStatus.BAD_REQUEST),
             false,
           );
         }
@@ -89,8 +74,7 @@ export class TrendTopicController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }),
           new FileTypeValidator({
-            fileType:
-              /^(image\/(jpeg|png|gif|webp)|video\/(mp4|quicktime|webm|ogg))$/,
+            fileType: /^(image\/(jpeg|png|gif|webp))$/,
           }),
         ],
         fileIsRequired: false,
@@ -98,7 +82,14 @@ export class TrendTopicController {
     )
     file?: Express.Multer.File,
   ) {
+    console.log('--- TrendTopicController ---');
+    console.log(
+      'Received file:',
+      file ? `${file.originalname} (${file.mimetype})` : 'No file',
+    );
+    console.log('Received postData:', trendTopicData);
     const role = req.user.role;
+    console.log(req.user);
     if (role !== 'Admin') {
       return {
         statusCode: HttpStatus.FORBIDDEN,
@@ -109,6 +100,7 @@ export class TrendTopicController {
       trendTopicData,
       file,
     );
+    console.log('>> Sau khi gọi service');
     return {
       statusCode: HttpStatus.OK,
       message: 'Tạo xu hướng thành công',

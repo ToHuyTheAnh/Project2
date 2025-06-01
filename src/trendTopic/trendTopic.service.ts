@@ -3,7 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateTrendTopicDto, UpdateTrendTopicDto } from './trendTopic.dto';
 import { TrendTopic } from '@prisma/client';
-import path from 'path';
+import * as path from 'path';
 
 @Injectable()
 export class TrendTopicService {
@@ -14,6 +14,8 @@ export class TrendTopicService {
     file?: Express.Multer.File,
   ): Promise<TrendTopic> {
     try {
+      console.log('==> [Backend] Nhận DTO:', trendTopicData);
+      console.log('==> [Backend] Nhận file:', file);
       const dataToSave: any = {
         ...trendTopicData,
         imageUrl: trendTopicData.imageUrl || null,
@@ -28,12 +30,10 @@ export class TrendTopicService {
           dataToSave.imageUrl = finalUrl;
           dataToSave.videoUrl = null;
           console.log(`Saving image URL: ${finalUrl}`);
-        } else if (file.mimetype.startsWith('video')) {
-          dataToSave.videoUrl = finalUrl;
-          dataToSave.imageUrl = null;
-          console.log(`Saving video URL: ${finalUrl}`);
         }
       }
+      delete dataToSave.videoUrl;
+      console.log('==> [Backend] Dữ liệu sẽ lưu vào DB:', dataToSave);
       return await this.prismaService.trendTopic.create({
         data: dataToSave,
       });
