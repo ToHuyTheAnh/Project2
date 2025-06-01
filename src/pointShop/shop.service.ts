@@ -1,8 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
-import { ShopItem, UserItem} from '@prisma/client';
+import { ShopItem, UserItem } from '@prisma/client';
 import { CreateShopItemDto, UpdateShopItemDto } from './shop.dto';
-
 
 @Injectable()
 export class ShopService {
@@ -16,12 +15,16 @@ export class ShopService {
         price: parseInt(shopItemData.price.toString()),
         type: shopItemData.type,
         imageUrl: shopItemData.imageUrl || '',
-        discount: shopItemData.discount || 0, 
-      }
+        discount: shopItemData.discount || 0,
+      },
     });
   }
 
-  async updateShopItem(id: string, shopItemData: UpdateShopItemDto, userId: string) {
+  async updateShopItem(
+    id: string,
+    shopItemData: UpdateShopItemDto,
+    userId: string,
+  ) {
     const shopItem = await this.prismaService.shopItem.findUnique({
       where: { id },
     });
@@ -35,8 +38,6 @@ export class ShopService {
         HttpStatus.NOT_FOUND,
       );
     }
-
-
 
     return this.prismaService.shopItem.update({
       where: { id },
@@ -154,7 +155,7 @@ export class ShopService {
       where: { id: userId },
       data: {
         point: {
-          decrement: item.price, 
+          decrement: item.price,
         },
       },
     });
@@ -165,7 +166,6 @@ export class ShopService {
         itemId: itemId,
       },
     });
-
   }
 
   async getUserItems(userId: string) {

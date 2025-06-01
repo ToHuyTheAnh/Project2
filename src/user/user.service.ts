@@ -27,7 +27,7 @@ export class UserService {
     return this.prismaService.user.findMany();
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserById(id: string) {
     const user = await this.prismaService.user.findUnique({
       where: { id },
     });
@@ -40,7 +40,19 @@ export class UserService {
         HttpStatus.NOT_FOUND,
       );
     }
-    return user;
+    const followers = await this.prismaService.userFollow.findMany({
+      where: { followingId: id },
+      select: { follower: true },
+    });
+    const followings = await this.prismaService.userFollow.findMany({
+      where: { followerId: id },
+      select: { following: true },
+    });
+    return {
+      user,
+      followers: followers.map((f) => f.follower),
+      followings: followings.map((f) => f.following),
+    };
   }
 
   async deleteUserById(id: string) {
