@@ -281,9 +281,9 @@ export class UserService {
         },
       },
       orderBy: {
-        point: 'desc', 
+        point: 'desc',
       },
-      take: 3, 
+      take: 3,
     });
     return users;
   }

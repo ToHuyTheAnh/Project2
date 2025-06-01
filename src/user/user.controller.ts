@@ -77,7 +77,7 @@ export class UserController {
     };
   }
 
-  @Get("/ranking")
+  @Get('/ranking')
   async getAllUserTrendingPoint() {
     const users = await this.userService.getAllUserTrendingPoints();
     return {
@@ -86,7 +86,6 @@ export class UserController {
       data: users,
     };
   }
-
 
   @Get('friend')
   @UseGuards(AuthGuard('jwt'))
