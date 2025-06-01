@@ -88,7 +88,7 @@ export class ReactionController {
   async getUserReactionsByPostId(
     @Req() req: AuthenticatedRequest,
     @Param('postId') postId: string,
-  ) { 
+  ) {
     const userId = req.user.userId;
     if (!postId) {
       throw new HttpException(
@@ -99,7 +99,10 @@ export class ReactionController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const reactions = await this.reactionService.getReactionsByUserId(userId, postId);
+    const reactions = await this.reactionService.getReactionsByUserId(
+      userId,
+      postId,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy danh sách cảm xúc của người dùng theo bài đăng thành công',
