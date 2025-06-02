@@ -39,23 +39,23 @@ enum UserRelationship {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  username      String          @unique
-  email         String          @unique
-  password      String
-  status        UserStatus
-  role          UserRole
-  bio           String?
-  displayName   String
-  avatar        String?
-  hometown      String?
-  school        String?
-  birthday      DateTime? // Ngày sinh
+  id           String           @id @default(cuid())
+  username     String           @unique
+  email        String           @unique
+  password     String
+  status       UserStatus
+  role         UserRole
+  bio          String?
+  displayName  String
+  avatar       String?
+  hometown     String?
+  school       String?
+  birthday     DateTime? // Ngày sinh
   gender       UserGender       @default(Male)
   relationship UserRelationship @default(Single)
-  address       String? // Địa chỉ
-  frameUrl      String?
-  bgrUrl        String?
+  address      String? // Địa chỉ
+  frameUrl     String?
+  bgrUrl       String?
 
   emailVerified Boolean         @default(false)
   posts         Post[]          @relation("UserPost")
@@ -73,7 +73,7 @@ model User {
   updatedAt    DateTime       @updatedAt
   Reaction     Reaction[]
   Notification Notification[] @relation("ActorUserRelation")
-  UserItem     UserItem[]       @relation("UserItem")
+  UserItem     UserItem[]     @relation("UserItem")
 }
 
 enum PostStatus {
@@ -233,7 +233,6 @@ model Notification {
   createdAt DateTime           @default(now())
 }
 
-
 enum ItemType {
   FRAME
   IMAGE
@@ -246,18 +245,18 @@ model ShopItem {
   description String
   price       Int
   type        ItemType
-  imageUrl    String   
+  imageUrl    String
   discount    Int?     @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  UserItem    UserItem[] @relation("Item")
+
+  UserItem UserItem[] @relation("Item")
 }
 
 model UserItem {
-  id          String   @id @default(cuid())
-  userId      String 
-  user        User     @relation("UserItem", fields: [userId], references: [id])
-  itemId      String
-  item        ShopItem @relation("Item", fields: [itemId], references: [id])
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation("UserItem", fields: [userId], references: [id])
+  itemId String
+  item   ShopItem @relation("Item", fields: [itemId], references: [id])
 }
