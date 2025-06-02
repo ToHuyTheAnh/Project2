@@ -134,6 +134,16 @@ export class TrendTopicController {
     };
   }
 
+  @Get('trend-ranking/:trendTopicId')
+  async getTrendRankPoint(@Param('trendTopicId') trendTopicId : string){
+    const rank = await this.trendTopicService.getRankTrendPoint(trendTopicId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy BXH thành công',
+      data: rank,
+    };
+  }
+
   @Get(':id')
   async getTrendTopicById(@Param('id') id: string) {
     const trendTopic = await this.trendTopicService.getTrendTopicById(id);

@@ -74,6 +74,7 @@ model User {
   Reaction     Reaction[]
   Notification Notification[] @relation("ActorUserRelation")
   UserItem     UserItem[]     @relation("UserItem")
+  UserTrendPoint    UserTrendPoint[]    @relation("UserTrendPoint")
 }
 
 enum PostStatus {
@@ -259,4 +260,13 @@ model UserItem {
   user   User     @relation("UserItem", fields: [userId], references: [id])
   itemId String
   item   ShopItem @relation("Item", fields: [itemId], references: [id])
+}
+
+model UserTrendPoint {
+  id     String   @id @default(cuid())
+  userId String 
+  user   User     @relation("UserTrendPoint", fields: [userId], references: [id])
+  trendTopicId   String   
+  point  Int      @default(0)
+  @@unique([userId, trendTopicId])
 }

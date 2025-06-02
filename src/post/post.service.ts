@@ -88,6 +88,30 @@ export class PostService {
       where: { id: userId },
       data: { point: { increment: 5 } },
     });
+    const existingUserTrendPoint = await this.prismaService.userTrendPoint.findUnique({
+      where: { 
+          userId_trendTopicId:{
+            userId: userId,
+            trendTopicId: postData.trendTopicId
+          }
+        },
+    });
+    if (!existingUserTrendPoint){
+      await this.prismaService.userTrendPoint.create({
+        data: { userId : userId, trendTopicId: postData.trendTopicId, point: 5} 
+    });
+    }
+    else{
+      await this.prismaService.userTrendPoint.update({
+        where: { 
+          userId_trendTopicId:{
+            userId: userId,
+            trendTopicId: postData.trendTopicId
+          }
+        },
+        data: { point: { increment: 5 } }, 
+    });
+    }
 
     return this.prismaService.post.create({
       data: dataToSave,

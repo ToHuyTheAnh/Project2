@@ -40,7 +40,7 @@ export class ReactionService {
         type: reactionType || ReactionType.LIKE,
       },
     });
-    if (!existingReaction && post?.user?.id && post.user.id !== userId) {
+    if (!existingReaction && post?.user?.id && post.user.id !== userId && post.trendTopicId) {
             const user = await this.prismaService.user.findUnique({
                 where: { id: userId },
             });
@@ -58,7 +58,15 @@ export class ReactionService {
                 data: { point: { increment: 1 } },
                 select: { point: true }, 
             });
-            // console.log('Updated user point:', updatedUser.point);
+            await this.prismaService.userTrendPoint.update({
+                where: { 
+                  userId_trendTopicId:{
+                    userId: post.user.id,
+                    trendTopicId: post.trendTopicId
+                  }
+                },
+                data: { point: { increment: 1 } }, 
+            });
 
             if (updatedUser.point % 5 === 0) {
                 await this.prismaService.notification.create({
@@ -103,6 +111,17 @@ export class ReactionService {
       where: { id: post?.user?.id },
       data: { point: { decrement: 1 } },
     });
+    if (post?.user.id && post.trendTopicId){
+      await this.prismaService.userTrendPoint.update({
+        where: { 
+          userId_trendTopicId:{
+            userId: post?.user?.id,
+            trendTopicId: post?.trendTopicId
+          }
+        },
+        data: { point: { decrement: 1 } }, 
+    });
+    }
   }
 
   async getReactionsByPostId(postId: string) {

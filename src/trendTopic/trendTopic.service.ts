@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateTrendTopicDto, UpdateTrendTopicDto } from './trendTopic.dto';
-import { TrendTopic } from '@prisma/client';
+import { TrendTopic, UserTrendPoint } from '@prisma/client';
 import * as path from 'path';
 
 @Injectable()
@@ -116,5 +116,21 @@ export class TrendTopicService {
     }
 
     return trendTopics;
+  }
+
+  async getRankTrendPoint(trendTopicId: string){
+    const rankTrend = await this.prismaService.userTrendPoint.findMany({
+      where :{
+        trendTopicId: trendTopicId
+      },
+      include :{
+        user: true
+      },
+      orderBy: {
+        point: 'desc',
+      },
+      take: 3
+    });
+    return rankTrend;
   }
 }
