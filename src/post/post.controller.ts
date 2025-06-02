@@ -205,7 +205,6 @@ export class PostController {
     };
   }
 
-  // @UseGuards(AuthGuard('jwt'))
   @Get('user-posts/:userId')
   async getPostsByUserId(@Param('userId') userId: string) {
     const posts = await this.postService.getPostsByUserId(userId);
@@ -274,7 +273,6 @@ export class PostController {
     };
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('shared/:userId')
   async getSharedPosts(@Param('userId') userId: string) {
     const posts = await this.postService.getPostShareByUserId(userId);

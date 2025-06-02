@@ -297,18 +297,11 @@ export class PostService {
     deleteFileIfExists(post.imageUrl);
     deleteFileIfExists(post.videoUrl);
 
-    // --- Xóa bài đăng khỏi DB ---
-    // Lưu ý: Do có `onDelete: Cascade` ở Comment và Reaction, các bản ghi liên quan cũng sẽ bị xóa.
-    // UserSharePost cũng nên có onDelete: Cascade để xóa khi post bị xóa.
-    await this.prismaService.post.delete({
-      where: { id },
-    });
-
     // --- Hoặc: Cập nhật status thành Deleted ---
-    // await this.prismaService.post.update({
-    //   where: { id },
-    //   data: { status: PostStatus.Deleted },
-    // });
+    await this.prismaService.post.update({
+      where: { id },
+      data: { status: PostStatus.Deleted },
+    });
   }
 
   async searchPostByKeyword(keyword: string): Promise<Post[]> {

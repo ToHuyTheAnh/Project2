@@ -205,6 +205,7 @@ export class UserService {
         address: true,
         frameUrl: true,
         bgrUrl: true,
+        point: true,
       },
     });
 
@@ -297,7 +298,7 @@ export class UserService {
       orderBy: {
         point: 'desc',
       },
-      take: 3,
+      take: 10,
     });
     return users;
   }
