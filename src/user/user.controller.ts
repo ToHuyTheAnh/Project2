@@ -218,7 +218,7 @@ export class UserController {
     const bannedUser = await this.userService.banUser(id);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Ban tài khoản thành công',
+      message: 'Chỉnh sửa tài khoản thành công',
       data: bannedUser,
     };
   }

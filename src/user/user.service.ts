@@ -2,14 +2,24 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User, UserStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createUser(userData: CreateUserDto): Promise<User> {
+    const hashed = await bcrypt.hash(userData.password, 10);
     return this.prismaService.user.create({
-      data: userData,
+      data: {
+        username: userData.username,
+        displayName: userData.displayName,
+        status: 'Active',
+        role: userData.role,
+        email: userData.email,
+        password: hashed,
+        avatar: userData.avatar
+      },
     });
   }
 
@@ -171,18 +181,15 @@ export class UserService {
 
     // Kiểm tra nếu user đã bị ban rồi thì không cần cập nhật nữa (tùy chọn)
     if (user.status === UserStatus.Banned) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: `User này đã bị ban trước đó.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+        return this.prismaService.user.update({
+        where: { id: userId },
+        data: { status: UserStatus.Active }, 
+      });
     }
 
     return this.prismaService.user.update({
       where: { id: userId },
-      data: { status: UserStatus.Banned }, // Sử dụng enum UserStatus
+      data: { status: UserStatus.Banned },
     });
   }
   // --- Kết thúc phương thức banUser ---
