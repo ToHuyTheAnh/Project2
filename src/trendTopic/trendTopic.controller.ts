@@ -172,4 +172,18 @@ export class TrendTopicController {
       data: trendTopics,
     };
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('trendPoint/:trendTopicId')
+  async getTrendPointByUserId(
+    @Req() req: AuthenticatedRequest,
+    @Param('trendTopicId') trendTopicId: string,
+  ) {
+    const userId = req.user.userId;
+    const trendPoint = await this.trendTopicService.getTrendPointByUserId(
+      trendTopicId,
+      userId,
+    );
+    return trendPoint;
+  }
 }

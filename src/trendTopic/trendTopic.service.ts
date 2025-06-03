@@ -133,4 +133,11 @@ export class TrendTopicService {
     });
     return rankTrend;
   }
+
+  async getTrendPointByUserId(trendTopicId: string, userId: string) {
+    const trendPoint = await this.prismaService.userTrendPoint.findFirst({
+      where: { trendTopicId, userId },
+    });
+    return trendPoint;
+  }
 }
