@@ -88,29 +88,29 @@ export class PostService {
       where: { id: userId },
       data: { point: { increment: 5 } },
     });
-    const existingUserTrendPoint = await this.prismaService.userTrendPoint.findUnique({
-      where: { 
-          userId_trendTopicId:{
+    const existingUserTrendPoint =
+      await this.prismaService.userTrendPoint.findUnique({
+        where: {
+          userId_trendTopicId: {
             userId: userId,
-            trendTopicId: postData.trendTopicId
-          }
+            trendTopicId: postData.trendTopicId,
+          },
         },
-    });
-    if (!existingUserTrendPoint){
+      });
+    if (!existingUserTrendPoint) {
       await this.prismaService.userTrendPoint.create({
-        data: { userId : userId, trendTopicId: postData.trendTopicId, point: 5} 
-    });
-    }
-    else{
+        data: { userId: userId, trendTopicId: postData.trendTopicId, point: 5 },
+      });
+    } else {
       await this.prismaService.userTrendPoint.update({
-        where: { 
-          userId_trendTopicId:{
+        where: {
+          userId_trendTopicId: {
             userId: userId,
-            trendTopicId: postData.trendTopicId
-          }
+            trendTopicId: postData.trendTopicId,
+          },
         },
-        data: { point: { increment: 5 } }, 
-    });
+        data: { point: { increment: 5 } },
+      });
     }
 
     return this.prismaService.post.create({
@@ -390,6 +390,8 @@ export class PostService {
           // Include bài post gốc
           include: {
             user: { select: { id: true, displayName: true, avatar: true } },
+            trendTopic: { select: { id: true, title: true } },
+            Reaction: true,
           }, // Include cả user của post gốc
         },
       },

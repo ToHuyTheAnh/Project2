@@ -118,18 +118,18 @@ export class TrendTopicService {
     return trendTopics;
   }
 
-  async getRankTrendPoint(trendTopicId: string){
+  async getRankTrendPoint(trendTopicId: string) {
     const rankTrend = await this.prismaService.userTrendPoint.findMany({
-      where :{
-        trendTopicId: trendTopicId
+      where: {
+        trendTopicId: trendTopicId,
       },
-      include :{
-        user: true
+      include: {
+        user: true,
       },
       orderBy: {
         point: 'desc',
       },
-      take: 3
+      take: 10,
     });
     return rankTrend;
   }

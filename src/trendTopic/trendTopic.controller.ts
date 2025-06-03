@@ -11,7 +11,6 @@ import {
   ParseFilePipe,
   Patch,
   Post,
-  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -135,7 +134,7 @@ export class TrendTopicController {
   }
 
   @Get('trend-ranking/:trendTopicId')
-  async getTrendRankPoint(@Param('trendTopicId') trendTopicId : string){
+  async getTrendRankPoint(@Param('trendTopicId') trendTopicId: string) {
     const rank = await this.trendTopicService.getRankTrendPoint(trendTopicId);
     return {
       statusCode: HttpStatus.OK,
