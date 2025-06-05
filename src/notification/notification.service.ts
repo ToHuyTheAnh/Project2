@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 
 import { PrismaService } from 'src/db/prisma.service';
 import {
@@ -6,20 +12,52 @@ import {
   UpdateNotificationDto,
 } from './notification.dto';
 import { Notification } from '@prisma/client';
+import { NotificationGateway } from './notification.gateway';
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(forwardRef(() => NotificationGateway))
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
 
   async createNotification(
     notificationData: CreateNotificationDto,
   ): Promise<Notification> {
-    return this.prismaService.notification.create({
+    const notification = await this.prismaService.notification.create({
       data: {
         ...notificationData,
         status: 'UNREAD',
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+        actorUser: {
+          select: {
+            id: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+      },
     });
+
+    this.notificationGateway.sendNotificationToUser(notification.userId, {
+      id: notification.id,
+      actor: notification.actor,
+      actorUser: notification.actorUser,
+      content: notification.content,
+      status: notification.status,
+      createdAt: notification.createdAt,
+    });
+
+    return notification;
   }
 
   async updateNotification(
@@ -94,20 +132,20 @@ export class NotificationService {
   }
 
   async markNotificationAsRead(ids: string[]) {
-    const notification = await this.prismaService.notification.findMany({
-      where: { id : { in: ids } },
+    const notifications = await this.prismaService.notification.findMany({
+      where: { id: { in: ids } },
     });
-    if (!notification) {
+    if (!notifications.length) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          message: `Thông báo không tồn tại`,
+          message: `Không tìm thấy thông báo nào`,
         },
         HttpStatus.NOT_FOUND,
       );
     }
     return this.prismaService.notification.updateMany({
-      where: { id: { in : ids } }, 
+      where: { id: { in: ids } },
       data: { status: 'READ' },
     });
   }

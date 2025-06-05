@@ -101,13 +101,6 @@ export class PostController {
     )
     file?: Express.Multer.File,
   ) {
-    console.log('--- PostController ---');
-    console.log(
-      'Received file:',
-      file ? `${file.originalname} (${file.mimetype})` : 'No file',
-    );
-    console.log('Received postData:', postData);
-
     if (!postData) {
       throw new HttpException(
         'Dữ liệu bài đăng không hợp lệ',

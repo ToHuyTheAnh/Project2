@@ -3,10 +3,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateCommentDto, UpdateCommentDto } from './comment.dto';
 import { Comment } from '@prisma/client';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class CommentService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async createComment(
     commentData: CreateCommentDto,
@@ -27,9 +31,7 @@ export class CommentService {
         actor: user?.username || 'Người dùng',
         content: 'đã bình luận về bài đăng của bạn',
       };
-      await this.prismaService.notification.create({
-        data: notificationData,
-      });
+      await this.notificationService.createNotification(notificationData);
     }
     return await this.prismaService.comment.create({
       data: {
