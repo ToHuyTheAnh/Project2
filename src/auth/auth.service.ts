@@ -55,6 +55,7 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new BadRequestException('Sai mật khẩu');
+    if (user.status == "Banned") throw new BadRequestException('Tài khoản đã bị khóa!!!');
 
     const accessToken = await this.signAccessToken(user.id, user.role);
     const refreshToken = await this.signRefreshToken(user.id, user.role);
