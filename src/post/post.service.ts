@@ -214,16 +214,26 @@ export class PostService {
     });
   }
 
-  async getPostsForUser(userId: string) {
-    const posts = await this.prismaService.post.findMany({
-      where: { status: PostStatus.Published },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { id: true, displayName: true, avatar: true } },
-        trendTopic: { select: { id: true, title: true } },
-        Reaction: true,
-      },
-    });
+  async getPostsForUser(userId: string, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [posts, totalPosts] = await Promise.all([
+      this.prismaService.post.findMany({
+        where: { status: PostStatus.Published },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, displayName: true, avatar: true } },
+          trendTopic: { select: { id: true, title: true } },
+          Reaction: true,
+        },
+      }),
+      this.prismaService.post.count({
+        where: { status: PostStatus.Published },
+      }),
+    ]);
+
     const postsWithUser = posts.map((post) => {
       const isReacted = post.Reaction.some(
         (reaction) => reaction.userId === userId,
@@ -233,7 +243,18 @@ export class PostService {
         isReacted,
       };
     });
-    return postsWithUser;
+
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return {
+      posts: postsWithUser,
+      pagination: {
+        totalPosts,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+    };
   }
 
   async getPostById(id: string): Promise<Post | null> {

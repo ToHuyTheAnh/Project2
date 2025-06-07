@@ -178,13 +178,27 @@ export class PostController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('for-user')
-  async getPostsForUser(@Req() req: AuthenticatedRequest) {
+  async getPostsForUser(
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
     const userId = req.user.userId;
-    const posts = await this.postService.getPostsForUser(userId);
+
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+
+    const result = await this.postService.getPostsForUser(
+      userId,
+      pageNumber,
+      limitNumber,
+    );
+
     return {
       statusCode: HttpStatus.OK,
       message: 'Lấy bài đăng cho người dùng thành công',
-      data: posts,
+      data: result.posts,
+      pagination: result.pagination,
     };
   }
 
