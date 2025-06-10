@@ -99,6 +99,16 @@ export class UserController {
     };
   }
 
+  @Patch('/update/:id/admin')
+  async adminUpdateUser(@Param('id') id: string, @Body() userData: UpdateUserDto){
+    const user = await this.userService.updateUser(id, userData);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Cập nhật user thành công',
+      data: user,
+    };
+  }
+
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   async getMe(@Req() req: AuthenticatedRequest) {
@@ -222,4 +232,6 @@ export class UserController {
       data: bannedUser,
     };
   }
+
+  
 }
